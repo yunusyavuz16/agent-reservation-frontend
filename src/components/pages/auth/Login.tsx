@@ -1,6 +1,6 @@
 import React, { useEffect } from 'react'
-import { useNavigate, Link } from 'react-router-dom'
-import { Formik, Form, Field, ErrorMessage } from 'formik'
+import { useNavigate, Link, useLocation } from 'react-router-dom'
+import { Formik, Form, Field } from 'formik'
 import * as Yup from 'yup'
 import {
   Box,
@@ -10,8 +10,11 @@ import {
   Paper,
   Container,
   Alert,
-  CircularProgress
+  CircularProgress,
+  InputAdornment,
+  IconButton
 } from '@mui/material'
+import { Visibility, VisibilityOff } from '@mui/icons-material'
 import { useAuthStore } from '../../../stores/authStore'
 import { LoginFormValues } from '../../../types'
 
@@ -25,14 +28,17 @@ const validationSchema = Yup.object({
 
 export function Login() {
   const navigate = useNavigate()
+  const location = useLocation()
   const { login, isAuthenticated, loading, error } = useAuthStore()
+  const [showPassword, setShowPassword] = React.useState(false)
 
-  // Redirect if already authenticated
+  // If user is already authenticated, redirect to homepage
   useEffect(() => {
     if (isAuthenticated) {
-      navigate('/')
+      const from = location.state?.from?.pathname || '/'
+      navigate(from, { replace: true })
     }
-  }, [isAuthenticated, navigate])
+  }, [isAuthenticated, navigate, location])
 
   const initialValues: LoginFormValues = {
     email: '',
@@ -40,18 +46,28 @@ export function Login() {
   }
 
   const handleSubmit = async (values: LoginFormValues) => {
-    await login(values.email, values.password)
+    try {
+      await login(values.email, values.password)
+      // Redirect happens in useEffect when isAuthenticated changes
+    } catch (err) {
+      // Error handling is done in the auth store
+      console.error('Login error:', err)
+    }
+  }
+
+  const handleTogglePassword = () => {
+    setShowPassword(prev => !prev)
   }
 
   return (
-    <Container maxWidth="xs" className="min-h-screen flex items-center justify-center">
+    <Container maxWidth="sm" className="min-h-screen flex items-center justify-center">
       <Paper elevation={3} className="p-8 w-full">
         <Box className="text-center mb-6">
           <Typography variant="h4" component="h1" className="font-bold text-primary">
             Sign In
           </Typography>
           <Typography variant="body2" color="textSecondary" className="mt-2">
-            Access your reservation dashboard
+            Access your reservation account
           </Typography>
         </Box>
 
@@ -88,10 +104,23 @@ export function Login() {
                   id="password"
                   name="password"
                   label="Password"
-                  type="password"
+                  type={showPassword ? 'text' : 'password'}
                   variant="outlined"
                   error={touched.password && Boolean(errors.password)}
                   helperText={touched.password && errors.password}
+                  InputProps={{
+                    endAdornment: (
+                      <InputAdornment position="end">
+                        <IconButton
+                          aria-label="toggle password visibility"
+                          onClick={handleTogglePassword}
+                          edge="end"
+                        >
+                          {showPassword ? <VisibilityOff /> : <Visibility />}
+                        </IconButton>
+                      </InputAdornment>
+                    )
+                  }}
                 />
               </Box>
 
@@ -102,7 +131,7 @@ export function Login() {
                 color="primary"
                 size="large"
                 disabled={isSubmitting || loading}
-                className="mb-3"
+                className="mb-4"
               >
                 {(isSubmitting || loading) ? (
                   <CircularProgress size={24} color="inherit" />
@@ -118,7 +147,7 @@ export function Login() {
           <Typography variant="body2">
             Don't have an account?{' '}
             <Link to="/register" className="text-primary hover:underline">
-              Register
+              Create Account
             </Link>
           </Typography>
         </Box>

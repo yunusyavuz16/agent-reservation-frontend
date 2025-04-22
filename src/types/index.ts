@@ -27,10 +27,16 @@ export interface Resource {
   imageUrl?: string
   isAvailable: boolean
   hourlyRate?: number
+  dailyRate?: number
+  capacity: number
   maxReservationHours?: number
   rules?: string
   createdAt: string
   updatedAt?: string
+  isActive: boolean
+  isAvailableNow?: boolean
+  nextAvailableTime?: string
+  averageRating?: number
 }
 
 // Reservation types
@@ -39,13 +45,27 @@ export interface Reservation {
   resourceId: number
   resourceName?: string
   userId: string
+  userName?: string
   startTime: string
   endTime: string
+  description?: string
   status: 'Pending' | 'Confirmed' | 'Cancelled' | 'Completed'
   notes?: string
   isPaid: boolean
+  price?: number
   createdAt: string
   updatedAt?: string
+  attendees: number
+  isRecurring: boolean
+  recurrencePattern?: string
+  recurrenceInterval?: number
+  recurrenceEndDate?: string
+  paymentDetails?: Payment
+  reviews?: Review[]
+  averageRating?: number
+  resourceCapacity?: number
+  resourceImageUrl?: string
+  resourceLocation?: string
 }
 
 // Review types
@@ -115,7 +135,24 @@ export interface ReservationFormValues {
   resourceId: number
   startTime: string
   endTime: string
-  notes?: string
+  description?: string
+  attendees?: number
+  isRecurring?: boolean
+  recurrencePattern?: string
+  recurrenceInterval?: number
+  recurrenceEndDate?: string
+}
+
+export interface CreateReservationFormValues {
+  resourceId: number
+  startTime: Date
+  endTime: Date
+  description?: string
+  attendees: number
+  isRecurring: boolean
+  recurrencePattern: string
+  recurrenceInterval: number
+  recurrenceEndDate: Date
 }
 
 export interface ReviewFormValues {
@@ -129,4 +166,10 @@ export interface PaymentFormValues {
   amount: number
   currency: string
   paymentMethod: string
+}
+
+export interface DateRangeValues {
+  startDate: Date
+  endDate: Date
+  resourceId?: number
 }

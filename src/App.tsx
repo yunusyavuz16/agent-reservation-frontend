@@ -2,6 +2,8 @@ import React, { useEffect } from 'react'
 import { Routes, Route, Navigate, useLocation } from 'react-router-dom'
 import { useAuthStore } from './stores/authStore'
 import { Layout } from './components/layout/Layout'
+import api from './utils/api'
+import { CircularProgress, Box } from '@mui/material'
 
 // Pages
 import { Login } from './components/pages/auth/Login'
@@ -25,16 +27,29 @@ interface ProtectedRouteProps {
 }
 
 function App() {
-  const { isAuthenticated, checkAuthStatus } = useAuthStore()
+  const { isAuthenticated, checkAuthStatus, loading } = useAuthStore()
   const location = useLocation()
 
   // Check auth status on app load and route changes
   useEffect(() => {
+    // Log API base URL in development
+    if (process.env.REACT_APP_ENVIRONMENT === 'development') {
+      console.log('API URL:', process.env.REACT_APP_API_URL)
+    }
+
     checkAuthStatus()
-  }, [checkAuthStatus, location.pathname])
+  }, [checkAuthStatus])
 
   // Protected route component that redirects to login if not authenticated
   const ProtectedRoute = ({ children, redirectPath = '/login' }: ProtectedRouteProps) => {
+    if (loading) {
+      return (
+        <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100vh' }}>
+          <CircularProgress />
+        </Box>
+      )
+    }
+
     if (!isAuthenticated) {
       return <Navigate to={redirectPath} state={{ from: location }} replace />
     }
@@ -42,12 +57,22 @@ function App() {
     return <>{children}</>
   }
 
+  const LoadingFallback = () => (
+    <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100vh' }}>
+      <CircularProgress />
+    </Box>
+  )
+
   return (
-    <React.Suspense fallback={<div className="flex justify-center items-center h-screen">Loading...</div>}>
+    <React.Suspense fallback={<LoadingFallback />}>
       <Routes>
         {/* Public routes */}
-        <Route path="/login" element={<Login />} />
-        <Route path="/register" element={<Register />} />
+        <Route path="/login" element={
+          isAuthenticated ? <Navigate to="/" replace /> : <Login />
+        } />
+        <Route path="/register" element={
+          isAuthenticated ? <Navigate to="/" replace /> : <Register />
+        } />
 
         {/* Protected routes */}
         <Route path="/" element={

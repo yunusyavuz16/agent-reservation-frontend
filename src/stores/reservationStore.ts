@@ -1,6 +1,6 @@
 import { create } from 'zustand'
-import axios from 'axios'
-import { Reservation, ReservationFormValues } from '../types'
+import api from '../utils/api'
+import { Reservation, ReservationFormValues, CreateReservationFormValues } from '../types'
 
 interface ReservationState {
   reservations: Reservation[]
@@ -12,12 +12,11 @@ interface ReservationState {
   fetchReservations: () => Promise<void>
   fetchUserReservations: () => Promise<void>
   fetchReservationById: (id: number) => Promise<void>
-  createReservation: (data: ReservationFormValues) => Promise<number | null>
+  createReservation: (data: CreateReservationFormValues) => Promise<number | null>
   updateReservation: (id: number, status: string) => Promise<void>
   cancelReservation: (id: number) => Promise<void>
+  checkAvailability: (startDate: Date, endDate: Date, resourceId?: number) => Promise<any[]>
 }
-
-const API_URL = 'http://localhost:5000/api'
 
 export const useReservationStore = create<ReservationState>((set, get) => ({
   reservations: [],
@@ -30,13 +29,11 @@ export const useReservationStore = create<ReservationState>((set, get) => ({
     set({ loading: true, error: null })
 
     try {
-      const response = await axios.get(`${API_URL}/Reservation`)
+      const response = await api.get('/Reservation')
       set({ reservations: response.data, loading: false })
     } catch (err) {
       const errorMessage =
-        axios.isAxiosError(err)
-          ? err.response?.data?.message || 'Failed to fetch reservations'
-          : 'An unexpected error occurred'
+        err.response?.data?.message || 'Failed to fetch reservations'
 
       set({ loading: false, error: errorMessage })
     }
@@ -46,13 +43,12 @@ export const useReservationStore = create<ReservationState>((set, get) => ({
     set({ loading: true, error: null })
 
     try {
-      const response = await axios.get(`${API_URL}/Reservation/user`)
+      // Using the correct endpoint based on the backend implementation
+      const response = await api.get('/Reservation')
       set({ userReservations: response.data, loading: false })
     } catch (err) {
       const errorMessage =
-        axios.isAxiosError(err)
-          ? err.response?.data?.message || 'Failed to fetch your reservations'
-          : 'An unexpected error occurred'
+        err.response?.data?.message || 'Failed to fetch your reservations'
 
       set({ loading: false, error: errorMessage })
     }
@@ -62,23 +58,31 @@ export const useReservationStore = create<ReservationState>((set, get) => ({
     set({ loading: true, error: null, selectedReservation: null })
 
     try {
-      const response = await axios.get(`${API_URL}/Reservation/${id}`)
+      const response = await api.get(`/Reservation/${id}`)
       set({ selectedReservation: response.data, loading: false })
     } catch (err) {
       const errorMessage =
-        axios.isAxiosError(err)
-          ? err.response?.data?.message || 'Failed to fetch reservation'
-          : 'An unexpected error occurred'
+        err.response?.data?.message || 'Failed to fetch reservation'
 
       set({ loading: false, error: errorMessage })
     }
   },
 
-  createReservation: async (data: ReservationFormValues) => {
+  createReservation: async (data: CreateReservationFormValues) => {
     set({ loading: true, error: null })
 
     try {
-      const response = await axios.post(`${API_URL}/Reservation`, data)
+      // Format dates to ISO strings as required by the backend
+      const formattedData = {
+        ...data,
+        startTime: data.startTime.toISOString(),
+        endTime: data.endTime.toISOString(),
+        recurrenceEndDate: data.isRecurring && data.recurrenceEndDate
+          ? data.recurrenceEndDate.toISOString()
+          : undefined
+      }
+
+      const response = await api.post('/Reservation', formattedData)
 
       // Refresh user reservations
       get().fetchUserReservations()
@@ -87,9 +91,7 @@ export const useReservationStore = create<ReservationState>((set, get) => ({
       return response.data.id
     } catch (err) {
       const errorMessage =
-        axios.isAxiosError(err)
-          ? err.response?.data?.message || 'Failed to create reservation'
-          : 'An unexpected error occurred'
+        err.response?.data?.message || 'Failed to create reservation'
 
       set({ loading: false, error: errorMessage })
       return null
@@ -100,7 +102,7 @@ export const useReservationStore = create<ReservationState>((set, get) => ({
     set({ loading: true, error: null })
 
     try {
-      await axios.patch(`${API_URL}/Reservation/${id}/status`, { status })
+      await api.patch(`/Reservation/${id}/status`, { status })
 
       // Update the selected reservation if it's the one being updated
       const { selectedReservation } = get()
@@ -119,9 +121,7 @@ export const useReservationStore = create<ReservationState>((set, get) => ({
       set({ loading: false })
     } catch (err) {
       const errorMessage =
-        axios.isAxiosError(err)
-          ? err.response?.data?.message || 'Failed to update reservation'
-          : 'An unexpected error occurred'
+        err.response?.data?.message || 'Failed to update reservation'
 
       set({ loading: false, error: errorMessage })
     }
@@ -131,7 +131,7 @@ export const useReservationStore = create<ReservationState>((set, get) => ({
     set({ loading: true, error: null })
 
     try {
-      await axios.patch(`${API_URL}/Reservation/${id}/status`, { status: 'Cancelled' })
+      await api.patch(`/Reservation/${id}/status`, { status: 'Cancelled' })
 
       // Update the selected reservation if it's the one being cancelled
       const { selectedReservation } = get()
@@ -150,11 +150,34 @@ export const useReservationStore = create<ReservationState>((set, get) => ({
       set({ loading: false })
     } catch (err) {
       const errorMessage =
-        axios.isAxiosError(err)
-          ? err.response?.data?.message || 'Failed to cancel reservation'
-          : 'An unexpected error occurred'
+        err.response?.data?.message || 'Failed to cancel reservation'
 
       set({ loading: false, error: errorMessage })
+    }
+  },
+
+  checkAvailability: async (startDate: Date, endDate: Date, resourceId?: number) => {
+    set({ loading: true, error: null })
+
+    try {
+      const params = new URLSearchParams({
+        startDate: startDate.toISOString(),
+        endDate: endDate.toISOString()
+      })
+
+      if (resourceId) {
+        params.append('resourceId', resourceId.toString())
+      }
+
+      const response = await api.get(`/Reservation/availability?${params}`)
+      set({ loading: false })
+      return response.data
+    } catch (err) {
+      const errorMessage =
+        err.response?.data?.message || 'Failed to check availability'
+
+      set({ loading: false, error: errorMessage })
+      return []
     }
   }
 }))

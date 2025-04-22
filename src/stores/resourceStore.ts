@@ -1,5 +1,5 @@
 import { create } from 'zustand'
-import axios from 'axios'
+import api from '../utils/api'
 import { Resource } from '../types'
 
 interface ResourceState {
@@ -12,8 +12,6 @@ interface ResourceState {
   filterResources: (searchTerm: string, category: string) => Resource[]
 }
 
-const API_URL = 'http://localhost:5000/api'
-
 export const useResourceStore = create<ResourceState>((set, get) => ({
   resources: [],
   selectedResource: null,
@@ -24,13 +22,11 @@ export const useResourceStore = create<ResourceState>((set, get) => ({
     set({ loading: true, error: null })
 
     try {
-      const response = await axios.get(`${API_URL}/Resource`)
+      const response = await api.get('/Resource')
       set({ resources: response.data, loading: false })
     } catch (err) {
       const errorMessage =
-        axios.isAxiosError(err)
-          ? err.response?.data?.message || 'Failed to fetch resources'
-          : 'An unexpected error occurred'
+        err.response?.data?.message || 'Failed to fetch resources'
 
       set({ loading: false, error: errorMessage })
     }
@@ -40,13 +36,11 @@ export const useResourceStore = create<ResourceState>((set, get) => ({
     set({ loading: true, error: null, selectedResource: null })
 
     try {
-      const response = await axios.get(`${API_URL}/Resource/${id}`)
+      const response = await api.get(`/Resource/${id}`)
       set({ selectedResource: response.data, loading: false })
     } catch (err) {
       const errorMessage =
-        axios.isAxiosError(err)
-          ? err.response?.data?.message || 'Failed to fetch resource'
-          : 'An unexpected error occurred'
+        err.response?.data?.message || 'Failed to fetch resource'
 
       set({ loading: false, error: errorMessage })
     }

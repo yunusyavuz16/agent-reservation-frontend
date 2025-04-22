@@ -1,6 +1,6 @@
 import { create } from 'zustand'
 import { persist } from 'zustand/middleware'
-import axios from 'axios'
+import api from '../utils/api'
 import { AuthState, User } from '../types'
 
 interface AuthStore extends AuthState {
@@ -16,8 +16,6 @@ interface AuthStore extends AuthState {
   checkAuthStatus: () => void
 }
 
-const API_URL = 'http://localhost:5000/api'
-
 export const useAuthStore = create<AuthStore>()(
   persist(
     (set, get) => ({
@@ -31,15 +29,12 @@ export const useAuthStore = create<AuthStore>()(
         set({ loading: true, error: null })
 
         try {
-          const response = await axios.post(`${API_URL}/Auth/login`, {
+          const response = await api.post('/Auth/login', {
             email,
             password
           })
 
           const { token, user } = response.data
-
-          // Set auth header for future requests
-          axios.defaults.headers.common['Authorization'] = `Bearer ${token}`
 
           set({
             isAuthenticated: true,
@@ -49,9 +44,7 @@ export const useAuthStore = create<AuthStore>()(
           })
         } catch (err) {
           const errorMessage =
-            axios.isAxiosError(err)
-              ? err.response?.data?.message || 'Login failed'
-              : 'An unexpected error occurred'
+            err.response?.data?.message || 'Login failed. Please check your credentials.'
 
           set({
             isAuthenticated: false,
@@ -73,7 +66,7 @@ export const useAuthStore = create<AuthStore>()(
         set({ loading: true, error: null })
 
         try {
-          await axios.post(`${API_URL}/Auth/register`, {
+          await api.post('/Auth/register', {
             firstName,
             lastName,
             email,
@@ -84,18 +77,13 @@ export const useAuthStore = create<AuthStore>()(
           set({ loading: false })
         } catch (err) {
           const errorMessage =
-            axios.isAxiosError(err)
-              ? err.response?.data?.message || 'Registration failed'
-              : 'An unexpected error occurred'
+            err.response?.data?.message || 'Registration failed. Please try again.'
 
           set({ loading: false, error: errorMessage })
         }
       },
 
       logout: () => {
-        // Remove auth header
-        delete axios.defaults.headers.common['Authorization']
-
         set({
           isAuthenticated: false,
           user: null,
@@ -106,8 +94,7 @@ export const useAuthStore = create<AuthStore>()(
       checkAuthStatus: () => {
         const state = get()
         if (state.token) {
-          // Set auth header for future requests
-          axios.defaults.headers.common['Authorization'] = `Bearer ${state.token}`
+          set({ isAuthenticated: true })
         }
       }
     }),
