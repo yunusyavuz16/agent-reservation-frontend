@@ -1,24 +1,42 @@
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
-
-/* Custom styles below */
-.reservation-calendar .active {
-  @apply bg-primary text-white;
+#root {
+  max-width: 1280px;
+  margin: 0 auto;
+  padding: 2rem;
+  text-align: center;
 }
 
-.notification-badge {
-  @apply absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center;
+.logo {
+  height: 6em;
+  padding: 1.5em;
+  will-change: filter;
+  transition: filter 300ms;
+}
+.logo:hover {
+  filter: drop-shadow(0 0 2em #646cffaa);
+}
+.logo.react:hover {
+  filter: drop-shadow(0 0 2em #61dafbaa);
+}
+
+@keyframes logo-spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  a:nth-of-type(2) .logo {
+    animation: logo-spin infinite 20s linear;
+  }
 }
 
 .card {
-  @apply bg-white rounded-md shadow-md p-4;
+  padding: 2em;
 }
 
-.btn-primary {
-  @apply bg-primary hover:bg-primary-dark text-white font-bold py-2 px-4 rounded;
-}
-
-.btn-secondary {
-  @apply bg-secondary hover:bg-secondary-dark text-gray-800 font-bold py-2 px-4 rounded;
+.read-the-docs {
+  color: #888;
 }

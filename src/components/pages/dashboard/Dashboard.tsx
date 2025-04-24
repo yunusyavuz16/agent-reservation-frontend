@@ -1,287 +1,206 @@
-import React, { useEffect, useState } from 'react'
-import { Link } from 'react-router-dom'
-import {
-  Grid,
-  Card,
-  CardContent,
-  Typography,
-  Box,
-  Button,
-  Divider,
-  CircularProgress,
-  Chip
-} from '@mui/material'
-import EventAvailableIcon from '@mui/icons-material/EventAvailable'
-import DateRangeIcon from '@mui/icons-material/DateRange'
-import NotificationsIcon from '@mui/icons-material/Notifications'
-import { format } from 'date-fns'
+import { format } from 'date-fns';
+import React, { useEffect, useState } from 'react';
+import { Link, useNavigate } from 'react-router-dom';
+import { useAuthStore } from '../../../stores/authStore';
+import { useReservationStore } from '../../../stores/reservationStore';
+import { Reservation, Resource } from '../../../types';
 
-import { useAuthStore } from '../../../stores/authStore'
-import { useReservationStore } from '../../../stores/reservationStore'
-import { useResourceStore } from '../../../stores/resourceStore'
-import { useNotificationStore } from '../../../stores/notificationStore'
-import { Reservation, Resource, Notification } from '../../../types'
+const Dashboard: React.FC = () => {
+  const navigate = useNavigate();
+  const { user } = useAuthStore();
+  const {
+    fetchUpcomingReservations,
+    upcomingReservations = [],
+    loading,
+    error
+  } = useReservationStore();
 
-function Dashboard() {
-  const { user } = useAuthStore()
-  const { userReservations, fetchUserReservations, loading: reservationsLoading } = useReservationStore()
-  const { resources, fetchResources, loading: resourcesLoading } = useResourceStore()
-  const { notifications, fetchNotifications, loading: notificationsLoading } = useNotificationStore()
-
-  const [recentReservations, setRecentReservations] = useState<Reservation[]>([])
-  const [availableResources, setAvailableResources] = useState<Resource[]>([])
-  const [recentNotifications, setRecentNotifications] = useState<Notification[]>([])
+  const [recentActivity, setRecentActivity] = useState<Reservation[]>([]);
+  const [recentReservations, setRecentReservations] = useState<Reservation[]>([]);
+  const [availableResources, setAvailableResources] = useState<Resource[]>([]);
+  const [recentNotifications, setRecentNotifications] = useState<any[]>([]);
 
   useEffect(() => {
-    fetchUserReservations()
-    fetchResources()
-    fetchNotifications()
-  }, [fetchUserReservations, fetchResources, fetchNotifications])
+    const loadDashboardData = async () => {
+      try {
+        await fetchUpcomingReservations();
+      } catch (error) {
+        console.error('Error fetching upcoming reservations:', error);
+      }
+    };
 
-  // Set recent items when data is loaded
+    loadDashboardData();
+  }, [fetchUpcomingReservations]);
+
   useEffect(() => {
-    // Sort reservations by start date and get the most recent ones
-    const sortedReservations = [...userReservations].sort(
-      (a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
-    )
-    setRecentReservations(sortedReservations.slice(0, 3))
+    if (upcomingReservations?.length > 0) {
+      setRecentActivity(upcomingReservations.slice(0, 3));
+      setRecentReservations(upcomingReservations.slice(0, 5));
+    }
+  }, [upcomingReservations]);
 
-    // Get available resources
-    const availableResourceList = resources.filter(r => r.isAvailable).slice(0, 3)
-    setAvailableResources(availableResourceList)
-
-    // Sort notifications by date and get the most recent ones
-    const sortedNotifications = [...notifications].sort(
-      (a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
-    )
-    setRecentNotifications(sortedNotifications.slice(0, 5))
-  }, [userReservations, resources, notifications])
-
-  const isLoading = reservationsLoading || resourcesLoading || notificationsLoading
-
-  if (isLoading) {
-    return (
-      <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '60vh' }}>
-        <CircularProgress />
-      </Box>
-    )
-  }
-
-  // Get status color for reservation status badge
   const getStatusColor = (status: string) => {
     switch (status) {
       case 'Confirmed':
-        return 'success'
+        return 'bg-green-100 text-green-800';
       case 'Pending':
-        return 'warning'
+        return 'bg-yellow-100 text-yellow-800';
       case 'Cancelled':
-        return 'error'
+        return 'bg-red-100 text-red-800';
       default:
-        return 'info'
+        return 'bg-blue-100 text-blue-800';
     }
+  };
+
+  const formatDate = (date: string) => {
+    try {
+      return format(new Date(date), 'MMM dd, yyyy • h:mm a');
+    } catch (error) {
+      return 'Invalid date';
+    }
+  };
+
+  if (loading) {
+    return (
+      <div className="flex h-screen items-center justify-center">
+        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-500"></div>
+      </div>
+    );
   }
 
   return (
-    <div>
-      <Box sx={{ mb: 4 }}>
-        <Typography variant="h4" component="h1" gutterBottom>
-          Welcome, {user?.firstName || 'User'}!
-        </Typography>
-        <Typography variant="body1" color="textSecondary">
-          Here's an overview of your reservations and available resources.
-        </Typography>
-      </Box>
+    <div className="p-6">
+      {error && (
+        <div className="mb-4 p-4 bg-red-100 text-red-800 rounded-lg">
+          {error}
+        </div>
+      )}
 
-      <Grid container spacing={4}>
-        {/* Recent Reservations */}
-        <Grid item xs={12} md={6}>
-          <Card className="h-full">
-            <CardContent>
-              <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
-                <DateRangeIcon color="primary" sx={{ mr: 1 }} />
-                <Typography variant="h6">Your Recent Reservations</Typography>
-              </Box>
-              <Divider sx={{ mb: 2 }} />
+      <div className="flex justify-between items-center mb-8">
+        <div>
+          <h1 className="text-3xl font-bold text-gray-800 mb-1">
+            Welcome back, {user?.firstName || 'User'}!
+          </h1>
+          <p className="text-gray-600">
+            Here's an overview of your reservations and recent activity
+          </p>
+        </div>
+        <button
+          onClick={() => navigate('/resources')}
+          className="bg-blue-600 hover:bg-blue-700 text-white font-medium py-2 px-4 rounded-lg shadow-md hover:shadow-lg transition-all duration-300 flex items-center"
+        >
+          <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+          </svg>
+          Make New Reservation
+        </button>
+      </div>
 
-              {recentReservations.length > 0 ? (
-                <>
-                  {recentReservations.map(reservation => (
-                    <Box
-                      key={reservation.id}
-                      sx={{
-                        mb: 2,
-                        p: 2,
-                        bgcolor: 'background.paper',
-                        borderRadius: 1,
-                        boxShadow: 1
-                      }}
+      {/* Stats Cards */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+        <div className="bg-white rounded-lg shadow-md p-6">
+          <div className="flex items-center mb-4">
+            <svg className="w-6 h-6 text-blue-500 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+            </svg>
+            <h2 className="text-lg font-semibold">Recent Reservations</h2>
+          </div>
+          <div className="border-t border-gray-200 mb-4"></div>
+
+          {recentReservations.length > 0 ? (
+            <>
+              {recentReservations.map((reservation) => (
+                <div
+                  key={reservation.id}
+                  className="mb-4 p-4 bg-gray-50 rounded-lg"
+                >
+                  <h3 className="text-lg font-medium mb-1">
+                    {reservation.resourceName || 'Unnamed Resource'}
+                  </h3>
+                  <p className="text-gray-600 text-sm mb-2">
+                    {formatDate(reservation.startTime)}
+                  </p>
+                  <span className={`inline-block px-3 py-1 rounded-full text-sm font-medium ${getStatusColor(reservation.status)}`}>
+                    {reservation.status}
+                  </span>
+                  <div className="mt-3">
+                    <Link
+                      to={`/reservations/${reservation.id}`}
+                      className="text-blue-600 hover:text-blue-800 hover:underline"
                     >
-                      <Typography variant="subtitle1" gutterBottom>
-                        {reservation.resourceName || 'Unnamed Resource'}
-                      </Typography>
-                      <Typography variant="body2" color="textSecondary" gutterBottom>
-                        {format(new Date(reservation.startTime), 'MMM d, yyyy h:mm a')} -
-                        {format(new Date(reservation.endTime), 'h:mm a')}
-                      </Typography>
-                      <Chip
-                        label={reservation.status}
-                        color={getStatusColor(reservation.status) as any}
-                        variant="outlined"
-                        size="small"
-                        sx={{ mt: 1 }}
-                      />
-                      <Box sx={{ mt: 2 }}>
-                        <Link to={`/reservations/${reservation.id}`} className="text-primary hover:underline">
-                          View Details
-                        </Link>
-                      </Box>
-                    </Box>
-                  ))}
-                  <Box sx={{ mt: 2 }}>
-                    <Link to="/reservations" className="inline-block text-primary hover:underline">
-                      View All Reservations
+                      View Details
                     </Link>
-                  </Box>
-                </>
-              ) : (
-                <Box sx={{ textAlign: 'center', py: 4 }}>
-                  <Typography variant="body1" gutterBottom>
-                    You have no recent reservations.
-                  </Typography>
-                  <Link to="/reservations/create" className="no-underline">
-                    <Button variant="contained" color="primary" sx={{ mt: 1 }}>
-                      Create a Reservation
-                    </Button>
-                  </Link>
-                </Box>
-              )}
-            </CardContent>
-          </Card>
-        </Grid>
+                  </div>
+                </div>
+              ))}
+              <div className="mt-4">
+                <Link
+                  to="/reservations"
+                  className="text-blue-600 hover:text-blue-800 hover:underline"
+                >
+                  View All Reservations
+                </Link>
+              </div>
+            </>
+          ) : (
+            <div className="text-center py-6">
+              <p className="text-gray-600 mb-4">
+                You have no recent reservations.
+              </p>
+              <Link to="/reservations/create" className="no-underline">
+                <button className="bg-blue-600 hover:bg-blue-700 text-white font-medium py-2 px-4 rounded-lg">
+                  Create a Reservation
+                </button>
+              </Link>
+            </div>
+          )}
+        </div>
 
         {/* Available Resources */}
-        <Grid item xs={12} md={6}>
-          <Card className="h-full">
-            <CardContent>
-              <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
-                <EventAvailableIcon color="primary" sx={{ mr: 1 }} />
-                <Typography variant="h6">Available Resources</Typography>
-              </Box>
-              <Divider sx={{ mb: 2 }} />
+        <div className="bg-white rounded-lg shadow-md p-6">
+          <div className="flex items-center mb-4">
+            <svg className="w-6 h-6 text-blue-500 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
+            </svg>
+            <h2 className="text-lg font-semibold">Available Resources</h2>
+          </div>
+          <div className="border-t border-gray-200 mb-4"></div>
 
-              {availableResources.length > 0 ? (
-                <>
-                  {availableResources.map(resource => (
-                    <Box
-                      key={resource.id}
-                      sx={{
-                        mb: 2,
-                        p: 2,
-                        bgcolor: 'background.paper',
-                        borderRadius: 1,
-                        boxShadow: 1
-                      }}
-                    >
-                      <Typography variant="subtitle1" gutterBottom>
-                        {resource.name}
-                      </Typography>
-                      <Typography variant="body2" color="textSecondary" gutterBottom noWrap>
-                        {resource.description}
-                      </Typography>
-                      <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mt: 1 }}>
-                        <Typography variant="body2" color="primary">
-                          {resource.location}
-                        </Typography>
-                        <Link to={`/resources/${resource.id}`} className="no-underline">
-                          <Button variant="outlined" size="small">
-                            Reserve
-                          </Button>
-                        </Link>
-                      </Box>
-                    </Box>
-                  ))}
-                  <Box sx={{ mt: 2 }}>
-                    <Link to="/resources" className="inline-block text-primary hover:underline">
-                      View All Resources
+          {availableResources.length > 0 ? (
+            <>
+              {availableResources.map((resource) => (
+                <div
+                  key={resource.id}
+                  className="mb-4 p-4 bg-gray-50 rounded-lg"
+                >
+                  <h3 className="text-lg font-medium mb-1">
+                    {resource.name}
+                  </h3>
+                  <p className="text-gray-600 text-sm mb-2 truncate">
+                    {resource.description}
+                  </p>
+                  <div className="flex justify-between items-center mt-2">
+                    <span className="text-blue-600">{resource.location}</span>
+                    <Link to={`/resources/${resource.id}`} className="no-underline">
+                      <button className="border border-blue-600 text-blue-600 hover:bg-blue-50 font-medium py-1 px-3 rounded-lg text-sm">
+                        Reserve
+                      </button>
                     </Link>
-                  </Box>
-                </>
-              ) : (
-                <Box sx={{ textAlign: 'center', py: 4 }}>
-                  <Typography variant="body1" gutterBottom>
-                    No resources available.
-                  </Typography>
-                  <Link to="/resources" className="no-underline">
-                    <Button variant="contained" color="primary" sx={{ mt: 1 }}>
-                      Check All Resources
-                    </Button>
-                  </Link>
-                </Box>
-              )}
-            </CardContent>
-          </Card>
-        </Grid>
-
-        {/* Recent Notifications */}
-        <Grid item xs={12}>
-          <Card>
-            <CardContent>
-              <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
-                <NotificationsIcon color="primary" sx={{ mr: 1 }} />
-                <Typography variant="h6">Recent Notifications</Typography>
-              </Box>
-              <Divider sx={{ mb: 2 }} />
-
-              {recentNotifications.length > 0 ? (
-                <>
-                  {recentNotifications.map(notification => (
-                    <Box
-                      key={notification.id}
-                      sx={{
-                        mb: 2,
-                        p: 2,
-                        bgcolor: notification.isRead ? 'background.paper' : 'action.hover',
-                        borderRadius: 1,
-                        boxShadow: 1
-                      }}
-                    >
-                      <Typography variant="subtitle1" gutterBottom>
-                        {notification.title}
-                      </Typography>
-                      <Typography variant="body2" color="textSecondary">
-                        {notification.message}
-                      </Typography>
-                      <Box sx={{ display: 'flex', justifyContent: 'space-between', mt: 1 }}>
-                        <Typography variant="caption" color="textSecondary">
-                          {format(new Date(notification.createdAt), 'MMM d, yyyy h:mm a')}
-                        </Typography>
-                        {notification.reservationId && (
-                          <Link to={`/reservations/${notification.reservationId}`} className="text-primary hover:underline text-sm">
-                            View Reservation
-                          </Link>
-                        )}
-                      </Box>
-                    </Box>
-                  ))}
-                  <Box sx={{ mt: 2 }}>
-                    <Link to="/notifications" className="inline-block text-primary hover:underline">
-                      View All Notifications
-                    </Link>
-                  </Box>
-                </>
-              ) : (
-                <Box sx={{ textAlign: 'center', py: 4 }}>
-                  <Typography variant="body1">
-                    You have no new notifications.
-                  </Typography>
-                </Box>
-              )}
-            </CardContent>
-          </Card>
-        </Grid>
-      </Grid>
+                  </div>
+                </div>
+              ))}
+            </>
+          ) : (
+            <div className="text-center py-6">
+              <p className="text-gray-600">
+                No resources available at the moment.
+              </p>
+            </div>
+          )}
+        </div>
+      </div>
     </div>
-  )
-}
+  );
+};
 
-export default Dashboard
+export default Dashboard;

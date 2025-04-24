@@ -1,16 +1,24 @@
 import { create } from 'zustand'
+import axios, { AxiosError } from 'axios'
 import api from '../utils/api'
 import { Reservation, ReservationFormValues, CreateReservationFormValues } from '../types'
+
+interface ApiErrorResponse {
+  message?: string;
+  [key: string]: any;
+}
 
 interface ReservationState {
   reservations: Reservation[]
   userReservations: Reservation[]
+  upcomingReservations: Reservation[]
   selectedReservation: Reservation | null
   loading: boolean
   error: string | null
 
   fetchReservations: () => Promise<void>
   fetchUserReservations: () => Promise<void>
+  fetchUpcomingReservations: () => Promise<void>
   fetchReservationById: (id: number) => Promise<void>
   createReservation: (data: CreateReservationFormValues) => Promise<number | null>
   updateReservation: (id: number, status: string) => Promise<void>
@@ -21,6 +29,7 @@ interface ReservationState {
 export const useReservationStore = create<ReservationState>((set, get) => ({
   reservations: [],
   userReservations: [],
+  upcomingReservations: [],
   selectedReservation: null,
   loading: false,
   error: null,
@@ -32,9 +41,8 @@ export const useReservationStore = create<ReservationState>((set, get) => ({
       const response = await api.get('/Reservation')
       set({ reservations: response.data, loading: false })
     } catch (err) {
-      const errorMessage =
-        err.response?.data?.message || 'Failed to fetch reservations'
-
+      const error = err as AxiosError<ApiErrorResponse>
+      const errorMessage = error.response?.data?.message || 'Failed to fetch reservations'
       set({ loading: false, error: errorMessage })
     }
   },
@@ -43,13 +51,24 @@ export const useReservationStore = create<ReservationState>((set, get) => ({
     set({ loading: true, error: null })
 
     try {
-      // Using the correct endpoint based on the backend implementation
       const response = await api.get('/Reservation')
       set({ userReservations: response.data, loading: false })
     } catch (err) {
-      const errorMessage =
-        err.response?.data?.message || 'Failed to fetch your reservations'
+      const error = err as AxiosError<ApiErrorResponse>
+      const errorMessage = error.response?.data?.message || 'Failed to fetch your reservations'
+      set({ loading: false, error: errorMessage })
+    }
+  },
 
+  fetchUpcomingReservations: async () => {
+    set({ loading: true, error: null })
+
+    try {
+      const response = await api.get('/Reservation/upcoming')
+      set({ upcomingReservations: response.data, loading: false })
+    } catch (err) {
+      const error = err as AxiosError<ApiErrorResponse>
+      const errorMessage = error.response?.data?.message || 'Failed to fetch upcoming reservations'
       set({ loading: false, error: errorMessage })
     }
   },
@@ -61,9 +80,8 @@ export const useReservationStore = create<ReservationState>((set, get) => ({
       const response = await api.get(`/Reservation/${id}`)
       set({ selectedReservation: response.data, loading: false })
     } catch (err) {
-      const errorMessage =
-        err.response?.data?.message || 'Failed to fetch reservation'
-
+      const error = err as AxiosError<ApiErrorResponse>
+      const errorMessage = error.response?.data?.message || 'Failed to fetch reservation'
       set({ loading: false, error: errorMessage })
     }
   },
@@ -72,7 +90,6 @@ export const useReservationStore = create<ReservationState>((set, get) => ({
     set({ loading: true, error: null })
 
     try {
-      // Format dates to ISO strings as required by the backend
       const formattedData = {
         ...data,
         startTime: data.startTime.toISOString(),
@@ -90,9 +107,8 @@ export const useReservationStore = create<ReservationState>((set, get) => ({
       set({ loading: false })
       return response.data.id
     } catch (err) {
-      const errorMessage =
-        err.response?.data?.message || 'Failed to create reservation'
-
+      const error = err as AxiosError<ApiErrorResponse>
+      const errorMessage = error.response?.data?.message || 'Failed to create reservation'
       set({ loading: false, error: errorMessage })
       return null
     }
@@ -120,9 +136,8 @@ export const useReservationStore = create<ReservationState>((set, get) => ({
 
       set({ loading: false })
     } catch (err) {
-      const errorMessage =
-        err.response?.data?.message || 'Failed to update reservation'
-
+      const error = err as AxiosError<ApiErrorResponse>
+      const errorMessage = error.response?.data?.message || 'Failed to update reservation'
       set({ loading: false, error: errorMessage })
     }
   },
@@ -149,9 +164,8 @@ export const useReservationStore = create<ReservationState>((set, get) => ({
 
       set({ loading: false })
     } catch (err) {
-      const errorMessage =
-        err.response?.data?.message || 'Failed to cancel reservation'
-
+      const error = err as AxiosError<ApiErrorResponse>
+      const errorMessage = error.response?.data?.message || 'Failed to cancel reservation'
       set({ loading: false, error: errorMessage })
     }
   },
@@ -173,9 +187,8 @@ export const useReservationStore = create<ReservationState>((set, get) => ({
       set({ loading: false })
       return response.data
     } catch (err) {
-      const errorMessage =
-        err.response?.data?.message || 'Failed to check availability'
-
+      const error = err as AxiosError<ApiErrorResponse>
+      const errorMessage = error.response?.data?.message || 'Failed to check availability'
       set({ loading: false, error: errorMessage })
       return []
     }

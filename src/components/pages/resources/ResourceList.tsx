@@ -1,426 +1,343 @@
-import React, { useState, useEffect } from 'react'
+import React, { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
-import {
-  Box,
-  Typography,
-  Grid,
-  Card,
-  CardMedia,
-  CardContent,
-  CardActions,
-  Button,
-  TextField,
-  FormControl,
-  InputLabel,
-  Select,
-  MenuItem,
-  InputAdornment,
-  Chip,
-  CircularProgress,
-  Alert,
-  Slider,
-  Pagination
-} from '@mui/material'
-import {
-  LocationOn as LocationOnIcon,
-  Search as SearchIcon,
-  EventAvailable as EventAvailableIcon
-} from '@mui/icons-material'
 import { useResourceStore } from '../../../stores/resourceStore'
+import { Resource } from '../../../types'
 
-const ResourceList = () => {
-  // State for filters and pagination
-  const [search, setSearch] = useState('')
-  const [categoryFilter, setCategoryFilter] = useState('')
-  const [filteredResources, setFilteredResources] = useState<any[]>([])
-  const [page, setPage] = useState(1)
-  const [filters, setFilters] = useState({
-    maxCapacity: undefined as number | undefined,
-    maxHourlyRate: undefined as number | undefined,
-    maxDailyRate: undefined as number | undefined,
-    isAvailableNow: false
-  })
-  const [categories, setCategories] = useState<string[]>([])
+// Extend Resource type with the missing properties
+interface ExtendedResource extends Resource {
+  type?: string;
+  averageRating?: number;
+  numberOfReviews?: number;
+  availability?: string;
+}
 
-  // Get resources data from the store
+function ResourceList() {
   const { resources, fetchResources, loading, error } = useResourceStore()
+  const [filteredResources, setFilteredResources] = useState<ExtendedResource[]>([])
+  const [searchTerm, setSearchTerm] = useState('')
+  const [typeFilter, setTypeFilter] = useState('all')
+  const [page, setPage] = useState(1)
+  const [itemsPerPage] = useState(8)
 
-  // Resources per page
-  const resourcesPerPage = 9
-
-  // Fetch resources on mount
+  // Fetch resources on component mount
   useEffect(() => {
     fetchResources()
   }, [fetchResources])
 
-  // Extract unique categories from resources
+  // Filter resources based on search term and type filter
   useEffect(() => {
-    const uniqueCategories = [...new Set(resources.map(r => r.category))]
-    setCategories(uniqueCategories)
-  }, [resources])
+    let result = [...resources] as ExtendedResource[]
 
-  // Filter resources based on search, category, and other filters
-  useEffect(() => {
-    let result = [...resources]
+    // Apply type filter
+    if (typeFilter !== 'all') {
+      result = result.filter(resource => resource.type === typeFilter)
+    }
 
-    // Apply search filter
-    if (search) {
-      const searchLower = search.toLowerCase()
+    // Apply search term (search in name or description)
+    if (searchTerm) {
       result = result.filter(
         resource =>
-          resource.name.toLowerCase().includes(searchLower) ||
-          resource.description.toLowerCase().includes(searchLower) ||
-          resource.location.toLowerCase().includes(searchLower)
+          resource.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+          (resource.description && resource.description.toLowerCase().includes(searchTerm.toLowerCase()))
       )
-    }
-
-    // Apply category filter
-    if (categoryFilter) {
-      result = result.filter(resource => resource.category === categoryFilter)
-    }
-
-    // Apply capacity filter
-    if (filters.maxCapacity !== undefined) {
-      result = result.filter(resource => resource.capacity <= (filters.maxCapacity || Infinity))
-    }
-
-    // Apply price filters
-    if (filters.maxHourlyRate !== undefined) {
-      result = result.filter(resource =>
-        resource.hourlyRate === null ||
-        resource.hourlyRate <= (filters.maxHourlyRate || Infinity)
-      )
-    }
-    if (filters.maxDailyRate !== undefined) {
-      result = result.filter(resource =>
-        resource.dailyRate === null ||
-        resource.dailyRate <= (filters.maxDailyRate || Infinity)
-      )
-    }
-
-    // Apply availability filter
-    if (filters.isAvailableNow) {
-      result = result.filter(resource => resource.isAvailableNow)
     }
 
     setFilteredResources(result)
-    setPage(1)
-  }, [resources, search, categoryFilter, filters])
+  }, [resources, searchTerm, typeFilter])
 
-  // Handle search input change
+  // Get all unique resource types
+  const resourceTypes = Array.from(new Set((resources as ExtendedResource[]).map(resource => resource.type).filter(Boolean)))
+
+  // Handle search change
   const handleSearchChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-    setSearch(event.target.value)
+    setSearchTerm(event.target.value)
+    setPage(1)
   }
 
-  // Handle category filter change
-  const handleCategoryChange = (event: React.ChangeEvent<{ value: unknown }>) => {
-    setCategoryFilter(event.target.value as string)
+  // Handle type filter change
+  const handleTypeFilterChange = (event: React.ChangeEvent<HTMLSelectElement>) => {
+    setTypeFilter(event.target.value)
+    setPage(1)
   }
 
-  // Handle other filter changes
-  const handleFilterChange = (filter: string, value: number | boolean) => {
-    setFilters(prev => ({
-      ...prev,
-      [filter]: value
-    }))
-  }
-
-  // Reset filters
-  const resetFilters = () => {
-    setSearch('')
-    setCategoryFilter('')
-    setFilters({
-      maxCapacity: undefined,
-      maxHourlyRate: undefined,
-      maxDailyRate: undefined,
-      isAvailableNow: false
-    })
+  // Handle page change
+  const handlePageChange = (newPage: number) => {
+    setPage(newPage)
   }
 
   // Calculate pagination
-  const totalPages = Math.ceil(filteredResources.length / resourcesPerPage)
-  const currentResources = filteredResources.slice(
-    (page - 1) * resourcesPerPage,
-    page * resourcesPerPage
+  const totalPages = Math.ceil(filteredResources.length / itemsPerPage)
+  const paginatedResources = filteredResources.slice(
+    (page - 1) * itemsPerPage,
+    page * itemsPerPage
   )
 
-  // Handle page change
-  const handlePageChange = (event: React.ChangeEvent<unknown>, value: number) => {
-    setPage(value)
-    window.scrollTo({ top: 0, behavior: 'smooth' })
-  }
+  // Helper function for rendering star ratings
+  const renderStarRating = (rating?: number) => {
+    const ratingValue = rating ? Math.round(rating) : 0;
+    return (
+      <div className="flex">
+        {[1, 2, 3, 4, 5].map((star) => (
+          <svg
+            key={star}
+            className={`h-4 w-4 ${
+              star <= ratingValue
+                ? 'text-yellow-400'
+                : 'text-gray-300'
+            }`}
+            xmlns="http://www.w3.org/2000/svg"
+            viewBox="0 0 20 20"
+            fill="currentColor"
+          >
+            <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118l-2.8-2.034c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
+          </svg>
+        ))}
+      </div>
+    );
+  };
 
+  // Loading state
   if (loading) {
     return (
-      <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '60vh' }}>
-        <CircularProgress />
-      </Box>
+      <div className="flex items-center justify-center min-h-[60vh]">
+        <div className="animate-spin rounded-full h-10 w-10 border-t-2 border-b-2 border-blue-600"></div>
+      </div>
     )
   }
 
+  // Error state
   if (error) {
     return (
-      <Box sx={{ textAlign: 'center', p: 4, color: 'error.main' }}>
-        <Typography variant="h6">{error}</Typography>
-        <Button
-          variant="contained"
-          color="primary"
-          sx={{ mt: 2 }}
-          onClick={() => window.location.reload()}
+      <div className="max-w-7xl mx-auto py-8 px-4 sm:px-6 lg:px-8">
+        <div className="mb-4 p-4 bg-red-100 text-red-800 rounded-lg border border-red-200">
+          {error}
+        </div>
+        <button
+          onClick={() => fetchResources()}
+          className="mt-4 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-lg transition-colors duration-200"
         >
-          Retry
-        </Button>
-      </Box>
+          Try Again
+        </button>
+      </div>
     )
   }
 
   return (
-    <div className="resource-list">
-      <Typography variant="h4" component="h1" gutterBottom>
-        Available Resources
-      </Typography>
+    <div className="max-w-7xl mx-auto py-8 px-4 sm:px-6 lg:px-8">
+      {/* Header */}
+      <div className="mb-8">
+        <h1 className="text-2xl font-bold text-gray-900 mb-2">
+          Available Resources
+        </h1>
+        <p className="text-gray-600">
+          Browse and reserve resources for your needs
+        </p>
+      </div>
 
-      <Box sx={{ mb: 4 }}>
-        <Grid container spacing={2} alignItems="center">
-          {/* Search Bar */}
-          <Grid item xs={12} md={6}>
-            <TextField
-              fullWidth
-              variant="outlined"
-              placeholder="Search resources by name, description, or location..."
-              value={search}
-              onChange={handleSearchChange}
-              InputProps={{
-                startAdornment: (
-                  <InputAdornment position="start">
-                    <SearchIcon />
-                  </InputAdornment>
-                ),
-              }}
-            />
-          </Grid>
+      {/* Filters */}
+      <div className="flex flex-col sm:flex-row gap-4 mb-8 items-center">
+        <div className="relative w-full sm:w-auto sm:flex-grow">
+          <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+            <svg className="h-5 w-5 text-gray-400" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+              <path fillRule="evenodd" d="M8 4a4 4 0 100 8 4 4 0 000-8zM2 8a6 6 0 1110.89 3.476l4.817 4.817a1 1 0 01-1.414 1.414l-4.816-4.816A6 6 0 012 8z" clipRule="evenodd" />
+            </svg>
+          </div>
+          <input
+            type="text"
+            placeholder="Search resources"
+            value={searchTerm}
+            onChange={handleSearchChange}
+            className="pl-10 pr-3 py-2 w-full border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+          />
+        </div>
 
-          {/* Category Filter */}
-          <Grid item xs={12} md={4}>
-            <FormControl fullWidth variant="outlined">
-              <InputLabel id="category-filter-label">Category</InputLabel>
-              <Select
-                labelId="category-filter-label"
-                id="category-filter"
-                value={categoryFilter}
-                onChange={handleCategoryChange}
-                label="Category"
-              >
-                <MenuItem value="">
-                  <em>All Categories</em>
-                </MenuItem>
-                {categories.map((category, index) => (
-                  <MenuItem key={index} value={category}>
-                    {category}
-                  </MenuItem>
-                ))}
-              </Select>
-            </FormControl>
-          </Grid>
-
-          {/* Reset Filters Button */}
-          <Grid item xs={12} md={2}>
-            <Button
-              variant="outlined"
-              color="primary"
-              fullWidth
-              onClick={resetFilters}
-              disabled={!search && !categoryFilter && !filters.maxCapacity && !filters.maxHourlyRate && !filters.maxDailyRate && !filters.isAvailableNow}
+        <div className="w-full sm:w-44">
+          <div className="flex items-center">
+            <svg className="h-5 w-5 text-gray-500 mr-2" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+              <path d="M5 4a1 1 0 00-2 0v7.268a2 2 0 000 3.464V16a1 1 0 102 0v-1.268a2 2 0 000-3.464V4zM11 4a1 1 0 10-2 0v1.268a2 2 0 000 3.464V16a1 1 0 102 0V8.732a2 2 0 000-3.464V4zM16 3a1 1 0 011 1v7.268a2 2 0 010 3.464V16a1 1 0 11-2 0v-1.268a2 2 0 010-3.464V4a1 1 0 011-1z" />
+            </svg>
+            <select
+              value={typeFilter}
+              onChange={handleTypeFilterChange}
+              className="w-full py-2 pl-2 pr-8 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 appearance-none bg-white"
             >
-              Reset Filters
-            </Button>
-          </Grid>
-        </Grid>
+              <option value="all">All Types</option>
+              {resourceTypes.map(type => (
+                <option key={type} value={type}>{type}</option>
+              ))}
+            </select>
+          </div>
+        </div>
+      </div>
 
-        {/* Advanced Filters */}
-        <Box sx={{ mt: 2, p: 2, border: '1px solid #e0e0e0', borderRadius: 1 }}>
-          <Typography variant="subtitle1" gutterBottom>
-            Advanced Filters
-          </Typography>
-
-          <Grid container spacing={3}>
-            {/* Capacity Filter */}
-            <Grid item xs={12} sm={6} md={3}>
-              <Typography variant="body2" gutterBottom>
-                Max Capacity
-              </Typography>
-              <Slider
-                value={filters.maxCapacity || 50}
-                onChange={(e, value) => handleFilterChange('maxCapacity', value as number)}
-                min={1}
-                max={100}
-                valueLabelDisplay="auto"
-                marks={[
-                  { value: 1, label: '1' },
-                  { value: 50, label: '50' },
-                  { value: 100, label: '100+' }
-                ]}
-              />
-            </Grid>
-
-            {/* Hourly Rate Filter */}
-            <Grid item xs={12} sm={6} md={3}>
-              <Typography variant="body2" gutterBottom>
-                Max Hourly Rate ($)
-              </Typography>
-              <Slider
-                value={filters.maxHourlyRate || 100}
-                onChange={(e, value) => handleFilterChange('maxHourlyRate', value as number)}
-                min={0}
-                max={200}
-                valueLabelDisplay="auto"
-                marks={[
-                  { value: 0, label: '$0' },
-                  { value: 100, label: '$100' },
-                  { value: 200, label: '$200+' }
-                ]}
-              />
-            </Grid>
-
-            {/* Daily Rate Filter */}
-            <Grid item xs={12} sm={6} md={3}>
-              <Typography variant="body2" gutterBottom>
-                Max Daily Rate ($)
-              </Typography>
-              <Slider
-                value={filters.maxDailyRate || 500}
-                onChange={(e, value) => handleFilterChange('maxDailyRate', value as number)}
-                min={0}
-                max={1000}
-                valueLabelDisplay="auto"
-                marks={[
-                  { value: 0, label: '$0' },
-                  { value: 500, label: '$500' },
-                  { value: 1000, label: '$1000+' }
-                ]}
-              />
-            </Grid>
-
-            {/* Availability Now Filter */}
-            <Grid item xs={12} sm={6} md={3}>
-              <FormControl fullWidth>
-                <Button
-                  variant={filters.isAvailableNow ? "contained" : "outlined"}
-                  color={filters.isAvailableNow ? "primary" : "secondary"}
-                  onClick={() => handleFilterChange('isAvailableNow', !filters.isAvailableNow)}
-                  startIcon={<EventAvailableIcon />}
-                >
-                  {filters.isAvailableNow ? 'Available Now' : 'Show All'}
-                </Button>
-              </FormControl>
-            </Grid>
-          </Grid>
-        </Box>
-      </Box>
-
-      {/* Resource Cards */}
-      {currentResources.length > 0 ? (
-        <>
-          <Grid container spacing={3}>
-            {currentResources.map(resource => (
-              <Grid item xs={12} sm={6} md={4} key={resource.id}>
-                <Card
-                  sx={{
-                    height: '100%',
-                    display: 'flex',
-                    flexDirection: 'column',
-                    transition: '0.3s',
-                    '&:hover': {
-                      boxShadow: 6
-                    }
-                  }}
-                >
-                  <CardMedia
-                    component="img"
-                    height="140"
-                    image={resource.imageUrl || 'https://via.placeholder.com/300x140?text=Resource'}
+      {/* Resources Grid */}
+      {paginatedResources.length > 0 ? (
+        <div className="animate-fadeIn">
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6 mb-8">
+            {paginatedResources.map(resource => (
+              <div key={resource.id} className="bg-white rounded-xl overflow-hidden shadow transition-all duration-300 hover:shadow-md transform hover:-translate-y-1 flex flex-col h-full">
+                <div className="relative">
+                  <img
+                    src={resource.imageUrl || "https://via.placeholder.com/300x160?text=Resource"}
                     alt={resource.name}
+                    className="h-40 w-full object-cover"
                   />
-                  <CardContent sx={{ flexGrow: 1 }}>
-                    <Typography variant="h6" component="h2" gutterBottom>
-                      {resource.name}
-                    </Typography>
+                  <div className="absolute top-3 right-3">
+                    <span className="bg-white bg-opacity-90 px-2 py-1 rounded-md shadow-sm text-xs font-medium">
+                      {resource.type || 'Unknown'}
+                    </span>
+                  </div>
+                </div>
 
-                    <Box sx={{ display: 'flex', alignItems: 'center', mb: 1 }}>
-                      <LocationOnIcon fontSize="small" sx={{ mr: 0.5, color: 'text.secondary' }} />
-                      <Typography variant="body2" color="text.secondary">
-                        {resource.location}
-                      </Typography>
-                    </Box>
+                <div className="flex-grow px-6 py-4">
+                  <h2 className="text-lg font-bold text-gray-900 mb-2 truncate">
+                    {resource.name}
+                  </h2>
 
-                    <Typography variant="body2" color="text.secondary" paragraph>
-                      {resource.description?.length > 100
-                        ? `${resource.description.substring(0, 100)}...`
-                        : resource.description}
-                    </Typography>
+                  {resource.averageRating !== undefined && (
+                    <div className="flex items-center gap-1 mb-3">
+                      {renderStarRating(resource.averageRating)}
+                      <span className="text-gray-500 text-sm">
+                        {resource.averageRating.toFixed(1)} ({resource.numberOfReviews || 0})
+                      </span>
+                    </div>
+                  )}
 
-                    <Box sx={{ mb: 1 }}>
-                      <Chip
-                        label={resource.category}
-                        size="small"
-                        color="primary"
-                        variant="outlined"
-                      />
-                      <Chip
-                        icon={<EventAvailableIcon />}
-                        label={resource.isAvailableNow ? 'Available' : 'Unavailable'}
-                        size="small"
-                        color={resource.isAvailableNow ? 'success' : 'error'}
-                        sx={{ ml: 1 }}
-                      />
-                    </Box>
-                  </CardContent>
-                  <CardActions>
-                    <Button
-                      size="small"
-                      component={Link}
-                      to={`/resources/${resource.id}`}
-                      color="primary"
-                    >
+                  <div className="flex items-start gap-2 mb-2">
+                    <svg className="w-5 h-5 text-gray-400 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+                    </svg>
+                    <span className="text-gray-600 truncate">
+                      {resource.location || "Location not specified"}
+                    </span>
+                  </div>
+
+                  <div className="flex items-start gap-2 mb-4">
+                    <svg className="w-5 h-5 text-gray-400 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                    </svg>
+                    {resource.availability === 'Available' ? (
+                      <span className="text-green-600">Available Now</span>
+                    ) : (
+                      <span className="text-amber-600">Limited Availability</span>
+                    )}
+                  </div>
+
+                  <p className="text-gray-500 line-clamp-2">
+                    {resource.description || "No description available"}
+                  </p>
+                </div>
+
+                <div className="px-6 py-4 border-t border-gray-100">
+                  <Link to={`/resources/${resource.id}`} className="w-full no-underline">
+                    <button className="w-full py-2 bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-lg transition-colors duration-200">
                       View Details
-                    </Button>
-                    <Button
-                      size="small"
-                      variant="contained"
-                      color="primary"
-                      component={Link}
-                      to={`/reservations/create?resourceId=${resource.id}`}
-                      disabled={!resource.isAvailableNow}
-                    >
-                      Reserve
-                    </Button>
-                  </CardActions>
-                </Card>
-              </Grid>
+                    </button>
+                  </Link>
+                </div>
+              </div>
             ))}
-          </Grid>
+          </div>
 
           {/* Pagination */}
           {totalPages > 1 && (
-            <Box sx={{ mt: 4, display: 'flex', justifyContent: 'center' }}>
-              <Pagination
-                count={totalPages}
-                page={page}
-                onChange={handlePageChange}
-                color="primary"
-              />
-            </Box>
+            <div className="flex justify-center my-6">
+              <nav className="isolate inline-flex -space-x-px rounded-md shadow-sm" aria-label="Pagination">
+                <button
+                  onClick={() => handlePageChange(1)}
+                  disabled={page === 1}
+                  className={`relative inline-flex items-center rounded-l-md px-2 py-2 ${
+                    page === 1
+                      ? 'text-gray-300 cursor-not-allowed'
+                      : 'text-gray-500 hover:bg-gray-50'
+                  }`}
+                >
+                  <span className="sr-only">First</span>
+                  <svg className="h-5 w-5" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+                    <path fillRule="evenodd" d="M12.707 5.293a1 1 0 010 1.414L9.414 10l3.293 3.293a1 1 0 01-1.414 1.414l-4-4a1 1 0 010-1.414l4-4a1 1 0 011.414 0z" clipRule="evenodd" />
+                  </svg>
+                </button>
+
+                {Array.from({ length: totalPages }).map((_, index) => {
+                  const pageNumber = index + 1;
+                  // Show current page, first and last page, and one page before and after current page
+                  if (
+                    pageNumber === 1 ||
+                    pageNumber === totalPages ||
+                    (pageNumber >= page - 1 && pageNumber <= page + 1)
+                  ) {
+                    return (
+                      <button
+                        key={pageNumber}
+                        onClick={() => handlePageChange(pageNumber)}
+                        className={`relative inline-flex items-center px-4 py-2 text-sm font-medium ${
+                          page === pageNumber
+                            ? 'z-10 bg-blue-50 border-blue-500 text-blue-600'
+                            : 'bg-white border-gray-300 text-gray-500 hover:bg-gray-50'
+                        } border`}
+                      >
+                        {pageNumber}
+                      </button>
+                    );
+                  } else if (
+                    pageNumber === page - 2 ||
+                    pageNumber === page + 2
+                  ) {
+                    return (
+                      <span
+                        key={pageNumber}
+                        className="relative inline-flex items-center px-4 py-2 text-sm font-medium text-gray-700 border border-gray-300 bg-white"
+                      >
+                        ...
+                      </span>
+                    );
+                  }
+                  return null;
+                })}
+
+                <button
+                  onClick={() => handlePageChange(totalPages)}
+                  disabled={page === totalPages}
+                  className={`relative inline-flex items-center rounded-r-md px-2 py-2 ${
+                    page === totalPages
+                      ? 'text-gray-300 cursor-not-allowed'
+                      : 'text-gray-500 hover:bg-gray-50'
+                  }`}
+                >
+                  <span className="sr-only">Last</span>
+                  <svg className="h-5 w-5" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+                    <path fillRule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clipRule="evenodd" />
+                  </svg>
+                </button>
+              </nav>
+            </div>
           )}
-        </>
+        </div>
       ) : (
-        <Box sx={{ textAlign: 'center', py: 8 }}>
-          <Typography variant="h6" gutterBottom>
-            No resources found matching your search criteria.
-          </Typography>
-          <Button variant="outlined" color="primary" onClick={resetFilters}>
-            Clear Filters
-          </Button>
-        </Box>
+        <div className="p-10 text-center rounded-xl shadow-sm bg-white mt-4">
+          <div className="max-w-md mx-auto">
+            <h2 className="font-bold text-xl text-gray-800 mb-2">
+              No resources found
+            </h2>
+            <p className="text-gray-600 mb-6">
+              {searchTerm || typeFilter !== 'all'
+                ? 'Try adjusting your search or filter criteria'
+                : 'There are no resources available at the moment.'}
+            </p>
+            {(searchTerm || typeFilter !== 'all') && (
+              <button
+                onClick={() => {
+                  setSearchTerm('');
+                  setTypeFilter('all');
+                }}
+                className="px-6 py-2 bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-lg transition-colors duration-200"
+              >
+                Clear Filters
+              </button>
+            )}
+          </div>
+        </div>
       )}
     </div>
   )

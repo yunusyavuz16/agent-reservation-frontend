@@ -2,8 +2,6 @@ import React, { useEffect } from 'react'
 import { Routes, Route, Navigate, useLocation } from 'react-router-dom'
 import { useAuthStore } from './stores/authStore'
 import { Layout } from './components/layout/Layout'
-import api from './utils/api'
-import { CircularProgress, Box } from '@mui/material'
 
 // Pages
 import { Login } from './components/pages/auth/Login'
@@ -33,8 +31,8 @@ function App() {
   // Check auth status on app load and route changes
   useEffect(() => {
     // Log API base URL in development
-    if (process.env.REACT_APP_ENVIRONMENT === 'development') {
-      console.log('API URL:', process.env.REACT_APP_API_URL)
+    if (import.meta.env.VITE_ENVIRONMENT === 'development') {
+      console.log('API URL:', import.meta.env.VITE_API_URL)
     }
 
     checkAuthStatus()
@@ -44,9 +42,9 @@ function App() {
   const ProtectedRoute = ({ children, redirectPath = '/login' }: ProtectedRouteProps) => {
     if (loading) {
       return (
-        <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100vh' }}>
-          <CircularProgress />
-        </Box>
+        <div className="flex h-screen items-center justify-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-600"></div>
+        </div>
       )
     }
 
@@ -58,9 +56,9 @@ function App() {
   }
 
   const LoadingFallback = () => (
-    <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100vh' }}>
-      <CircularProgress />
-    </Box>
+    <div className="flex h-screen items-center justify-center">
+      <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-600"></div>
+    </div>
   )
 
   return (

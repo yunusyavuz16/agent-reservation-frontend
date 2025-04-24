@@ -1,39 +1,13 @@
 import React, { useState, useEffect } from 'react'
 import { useNavigate, useLocation, useParams } from 'react-router-dom'
-import {
-  Container,
-  Typography,
-  Box,
-  Paper,
-  Stepper,
-  Step,
-  StepLabel,
-  Grid,
-  Button,
-  CircularProgress,
-  Alert,
-  Card,
-  CardContent,
-  CardActions,
-  Divider,
-  TextField,
-  FormControlLabel,
-  Checkbox,
-  FormControl,
-  InputLabel,
-  Select,
-  MenuItem
-} from '@mui/material'
-import { DateTimePicker } from '@mui/x-date-pickers/DateTimePicker'
-import { DatePicker } from '@mui/x-date-pickers/DatePicker'
-import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider'
-import { AdapterDateFns } from '@mui/x-date-pickers/AdapterDateFns'
 import { format, addHours, isAfter, isBefore, addDays } from 'date-fns'
 import { useFormik } from 'formik'
 import * as Yup from 'yup'
 import { useResourceStore } from '../../../stores/resourceStore'
 import { useReservationStore } from '../../../stores/reservationStore'
 import { CreateReservationFormValues } from '../../../types'
+import DatePicker from 'react-datepicker'
+import "react-datepicker/dist/react-datepicker.css"
 
 // Steps for the reservation process
 const steps = ['Select Resource', 'Choose Time', 'Confirm Details']
@@ -236,55 +210,59 @@ function CreateReservation() {
   }
 
   return (
-    <Container maxWidth="lg" sx={{ py: 4 }}>
-      <Paper sx={{ p: { xs: 2, md: 3 } }}>
-        <Typography component="h1" variant="h4" align="center" gutterBottom>
+    <div className="max-w-lg p-4">
+      <div className="p-3">
+        <h1 className="text-center text-2xl font-bold mb-4">
           Create Reservation
-        </Typography>
+        </h1>
 
         {/* Stepper */}
-        <Stepper activeStep={activeStep} sx={{ pt: 3, pb: 5 }}>
+        <div className="flex justify-center space-x-4 pt-3 pb-5">
           {steps.map((label) => (
-            <Step key={label}>
-              <StepLabel>{label}</StepLabel>
-            </Step>
+            <div key={label} className="flex items-center">
+              <div className="h-2 w-2 rounded-full bg-gray-500"></div>
+              <span className="ml-2">{label}</span>
+            </div>
           ))}
-        </Stepper>
+        </div>
 
         {/* Step content */}
         {getStepContent(activeStep)}
 
         {/* Navigation buttons - only show if not on success screen */}
         {!(activeStep === 2 && reservationSuccess) && (
-          <Box sx={{ display: 'flex', justifyContent: 'flex-end', mt: 3 }}>
+          <div className="flex justify-end mt-3 space-x-2">
             {activeStep !== 0 && (
-              <Button onClick={handleBack} sx={{ mr: 1 }}>
+              <button
+                onClick={handleBack}
+                className="px-4 py-2 bg-gray-500 text-white rounded"
+              >
                 Back
-              </Button>
+              </button>
             )}
 
             {activeStep === steps.length - 1 ? (
-              <Button
-                variant="contained"
-                color="primary"
+              <button
                 onClick={handleSubmitReservation}
+                className="px-4 py-2 bg-blue-500 text-white rounded"
                 disabled={reservationLoading || reservationSuccess}
               >
-                {reservationLoading ? <CircularProgress size={24} /> : 'Create Reservation'}
-              </Button>
+                {reservationLoading ? (
+                  <div className="animate-spin h-5 w-5 mx-auto"></div>
+                ) : 'Create Reservation'}
+              </button>
             ) : (
-              <Button
-                variant="contained"
-                color="primary"
+              <button
                 onClick={handleNext}
+                className="px-4 py-2 bg-blue-500 text-white rounded"
               >
                 Next
-              </Button>
+              </button>
             )}
-          </Box>
+          </div>
         )}
-      </Paper>
-    </Container>
+      </div>
+    </div>
   )
 }
 
@@ -310,85 +288,75 @@ function ResourceSelectionStep({ resources, onSelect, loading, error }: Resource
 
   if (loading) {
     return (
-      <Box sx={{ display: 'flex', justifyContent: 'center', py: 3 }}>
-        <CircularProgress />
-      </Box>
+      <div className="flex justify-center py-3">
+        <div className="animate-spin h-10 w-10"></div>
+      </div>
     )
   }
 
   if (error) {
     return (
-      <Alert severity="error" sx={{ mt: 2 }}>
+      <div className="mt-2 text-red-500">
         {error}
-      </Alert>
+      </div>
     )
   }
 
   return (
-    <Box>
-      <Typography variant="h6" gutterBottom>
+    <div>
+      <h2 className="text-base font-semibold mb-3">
         Select a resource to reserve
-      </Typography>
+      </h2>
 
-      <TextField
-        label="Search resources"
-        variant="outlined"
-        fullWidth
-        margin="normal"
+      <input
+        type="text"
+        placeholder="Search resources"
         value={searchTerm}
         onChange={(e) => setSearchTerm(e.target.value)}
+        className="w-full p-2 border border-gray-300 rounded"
       />
 
       {filteredResources.length > 0 ? (
-        <Grid container spacing={3} sx={{ mt: 1 }}>
+        <div className="mt-1 grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
           {filteredResources.map((resource) => (
-            <Grid item xs={12} sm={6} md={4} key={resource.id}>
-              <Card
-                variant="outlined"
-                sx={{
-                  cursor: 'pointer',
-                  transition: 'all 0.2s ease',
-                  '&:hover': {
-                    boxShadow: 3,
-                    transform: 'translateY(-4px)'
-                  }
-                }}
-                onClick={() => onSelect(resource)}
-              >
-                <CardContent>
-                  <Typography variant="h6" component="h2">
-                    {resource.name}
-                  </Typography>
-                  <Typography variant="body2" color="text.secondary" sx={{ mb: 1.5 }}>
-                    {resource.description && resource.description.length > 100
-                      ? `${resource.description.substring(0, 100)}...`
-                      : resource.description}
-                  </Typography>
-                  <Typography variant="body2">
-                    Capacity: {resource.capacity || 'N/A'}
-                  </Typography>
-                  <Typography variant="body2">
-                    Location: {resource.location}
-                  </Typography>
-                  {resource.hourlyRate && (
-                    <Typography variant="body2">
-                      Rate: ${resource.hourlyRate}/hour
-                    </Typography>
-                  )}
-                </CardContent>
-                <CardActions>
-                  <Button size="small" color="primary">Select</Button>
-                </CardActions>
-              </Card>
-            </Grid>
+            <div
+              key={resource.id}
+              className="cursor-pointer transition-all duration-200 hover:shadow-md hover:transform hover:translate-y-[-4px]"
+              onClick={() => onSelect(resource)}
+            >
+              <div className="p-4">
+                <h3 className="text-base font-semibold mb-2">
+                  {resource.name}
+                </h3>
+                <p className="text-sm text-gray-500 mb-1.5">
+                  {resource.description && resource.description.length > 100
+                    ? `${resource.description.substring(0, 100)}...`
+                    : resource.description}
+                </p>
+                <p className="text-sm">
+                  Capacity: {resource.capacity || 'N/A'}
+                </p>
+                <p className="text-sm">
+                  Location: {resource.location}
+                </p>
+                {resource.hourlyRate && (
+                  <p className="text-sm">
+                    Rate: ${resource.hourlyRate}/hour
+                  </p>
+                )}
+              </div>
+              <div className="p-2">
+                <button className="text-sm text-blue-500">Select</button>
+              </div>
+            </div>
           ))}
-        </Grid>
+        </div>
       ) : (
-        <Alert severity="info" sx={{ mt: 2 }}>
+        <div className="mt-2 text-sm text-gray-500">
           No resources found matching "{searchTerm}".
-        </Alert>
+        </div>
       )}
-    </Box>
+    </div>
   )
 }
 
@@ -400,168 +368,120 @@ interface TimeSelectionStepProps {
 
 function TimeSelectionStep({ formik, resource }: TimeSelectionStepProps) {
   return (
-    <Box>
-      <Typography variant="h6" gutterBottom>
+    <div>
+      <h2 className="text-base font-semibold mb-3">
         Select Reservation Details
-      </Typography>
+      </h2>
 
-      <Typography variant="subtitle1" sx={{ mb: 3 }}>
+      <p className="text-sm text-gray-500 mb-3">
         Resource: {resource?.name}
-      </Typography>
+      </p>
 
-      <LocalizationProvider dateAdapter={AdapterDateFns}>
-        <Grid container spacing={3}>
-          <Grid item xs={12} md={6}>
-            <DateTimePicker
-              label="Start Time"
-              value={formik.values.startTime}
-              onChange={(newValue) => {
-                formik.setFieldValue('startTime', newValue)
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+        <div className="md:col-span-1">
+          <input
+            type="datetime-local"
+            value={formik.values.startTime.toISOString().split('T')[0] + 'T' + formik.values.startTime.toISOString().split('T')[1]}
+            onChange={(e) => {
+              formik.setFieldValue('startTime', new Date(e.target.value))
+            }}
+            className="w-full p-2 border border-gray-300 rounded"
+          />
+        </div>
+        <div className="md:col-span-1">
+          <input
+            type="datetime-local"
+            value={formik.values.endTime.toISOString().split('T')[0] + 'T' + formik.values.endTime.toISOString().split('T')[1]}
+            onChange={(e) => {
+              formik.setFieldValue('endTime', new Date(e.target.value))
+            }}
+            className="w-full p-2 border border-gray-300 rounded"
+            min={formik.values.startTime.toISOString().split('T')[0] + 'T' + formik.values.startTime.toISOString().split('T')[1]}
+          />
+        </div>
+        <div className="md:col-span-2">
+          <textarea
+            placeholder="Any special requests or information about your reservation"
+            value={formik.values.description}
+            onChange={formik.handleChange}
+            className="w-full p-2 border border-gray-300 rounded"
+            rows={4}
+          ></textarea>
+        </div>
+
+        <div className="md:col-span-1">
+          <input
+            type="number"
+            placeholder="Number of Attendees"
+            value={formik.values.attendees}
+            onChange={formik.handleChange}
+            className="w-full p-2 border border-gray-300 rounded"
+            min="1"
+            max={resource?.capacity || 1}
+          />
+        </div>
+
+        <div className="md:col-span-2">
+          <div className="border-t border-gray-200 my-2"></div>
+          <p className="text-sm font-semibold mb-2">
+            Recurring Reservation Options
+          </p>
+          <div className="flex items-center">
+            <input
+              type="checkbox"
+              checked={formik.values.isRecurring}
+              onChange={(e) => {
+                formik.setFieldValue('isRecurring', e.target.checked);
               }}
-              disablePast
-              slotProps={{
-                textField: {
-                  variant: 'outlined',
-                  fullWidth: true,
-                  error: formik.touched.startTime && Boolean(formik.errors.startTime),
-                  helperText: formik.touched.startTime && formik.errors.startTime
-                }
-              }}
+              className="mr-2"
             />
-          </Grid>
-          <Grid item xs={12} md={6}>
-            <DateTimePicker
-              label="End Time"
-              value={formik.values.endTime}
-              onChange={(newValue) => {
-                formik.setFieldValue('endTime', newValue)
-              }}
-              disablePast
-              minDateTime={formik.values.startTime}
-              slotProps={{
-                textField: {
-                  variant: 'outlined',
-                  fullWidth: true,
-                  error: formik.touched.endTime && Boolean(formik.errors.endTime),
-                  helperText: formik.touched.endTime && formik.errors.endTime
-                }
-              }}
-            />
-          </Grid>
-          <Grid item xs={12}>
-            <TextField
-              label="Description (Optional)"
-              multiline
-              rows={4}
-              fullWidth
-              variant="outlined"
-              placeholder="Any special requests or information about your reservation"
-              name="description"
-              value={formik.values.description}
-              onChange={formik.handleChange}
-              error={formik.touched.description && Boolean(formik.errors.description)}
-              helperText={formik.touched.description && formik.errors.description}
-            />
-          </Grid>
+            <label>Make this a recurring reservation</label>
+          </div>
+        </div>
 
-          <Grid item xs={12} md={6}>
-            <TextField
-              label="Number of Attendees"
-              type="number"
-              fullWidth
-              name="attendees"
-              value={formik.values.attendees}
-              onChange={formik.handleChange}
-              error={formik.touched.attendees && Boolean(formik.errors.attendees)}
-              helperText={formik.touched.attendees && formik.errors.attendees}
-              InputProps={{
-                inputProps: { min: 1, max: resource?.capacity || 1 }
-              }}
-            />
-          </Grid>
+        {formik.values.isRecurring && (
+          <>
+            <div className="md:col-span-1">
+              <select
+                value={formik.values.recurrencePattern}
+                onChange={formik.handleChange}
+                className="w-full p-2 border border-gray-300 rounded"
+              >
+                {recurrencePatterns.map((pattern) => (
+                  <option key={pattern.value} value={pattern.value}>
+                    {pattern.label}
+                  </option>
+                ))}
+              </select>
+            </div>
 
-          <Grid item xs={12}>
-            <Divider sx={{ my: 2 }} />
-            <Typography variant="subtitle1" gutterBottom>
-              Recurring Reservation Options
-            </Typography>
-            <FormControlLabel
-              control={
-                <Checkbox
-                  checked={formik.values.isRecurring}
-                  onChange={(e) => {
-                    formik.setFieldValue('isRecurring', e.target.checked);
-                  }}
-                  name="isRecurring"
-                />
-              }
-              label="Make this a recurring reservation"
-            />
-          </Grid>
+            <div className="md:col-span-1">
+              <input
+                type="number"
+                placeholder="Repeat Every"
+                value={formik.values.recurrenceInterval}
+                onChange={formik.handleChange}
+                className="w-full p-2 border border-gray-300 rounded"
+                min="1"
+                disabled={!formik.values.recurrencePattern}
+              />
+            </div>
 
-          {formik.values.isRecurring && (
-            <>
-              <Grid item xs={12} md={4}>
-                <FormControl fullWidth error={formik.touched.recurrencePattern && Boolean(formik.errors.recurrencePattern)}>
-                  <InputLabel>Recurrence Pattern</InputLabel>
-                  <Select
-                    value={formik.values.recurrencePattern}
-                    onChange={formik.handleChange}
-                    label="Recurrence Pattern"
-                    name="recurrencePattern"
-                  >
-                    {recurrencePatterns.map((pattern) => (
-                      <MenuItem key={pattern.value} value={pattern.value}>
-                        {pattern.label}
-                      </MenuItem>
-                    ))}
-                  </Select>
-                </FormControl>
-              </Grid>
-
-              <Grid item xs={12} md={4}>
-                <TextField
-                  label="Repeat Every"
-                  type="number"
-                  fullWidth
-                  name="recurrenceInterval"
-                  value={formik.values.recurrenceInterval}
-                  onChange={formik.handleChange}
-                  error={formik.touched.recurrenceInterval && Boolean(formik.errors.recurrenceInterval)}
-                  helperText={
-                    (formik.touched.recurrenceInterval && formik.errors.recurrenceInterval) ||
-                    `${formik.values.recurrencePattern ? `Every ${formik.values.recurrenceInterval} ${formik.values.recurrencePattern}` : ''}`
-                  }
-                  InputProps={{
-                    inputProps: { min: 1 }
-                  }}
-                  disabled={!formik.values.recurrencePattern}
-                />
-              </Grid>
-
-              <Grid item xs={12} md={4}>
-                <DatePicker
-                  label="Recurrence End Date"
-                  value={formik.values.recurrenceEndDate}
-                  onChange={(newValue) => {
-                    formik.setFieldValue('recurrenceEndDate', newValue);
-                  }}
-                  disablePast
-                  slotProps={{
-                    textField: {
-                      variant: 'outlined',
-                      fullWidth: true,
-                      error: formik.touched.recurrenceEndDate && Boolean(formik.errors.recurrenceEndDate),
-                      helperText: formik.touched.recurrenceEndDate && formik.errors.recurrenceEndDate
-                    }
-                  }}
-                />
-              </Grid>
-            </>
-          )}
-        </Grid>
-      </LocalizationProvider>
-    </Box>
+            <div className="md:col-span-1">
+              <input
+                type="datetime-local"
+                value={formik.values.recurrenceEndDate.toISOString().split('T')[0] + 'T' + formik.values.recurrenceEndDate.toISOString().split('T')[1]}
+                onChange={(e) => {
+                  formik.setFieldValue('recurrenceEndDate', new Date(e.target.value));
+                }}
+                className="w-full p-2 border border-gray-300 rounded"
+                min={formik.values.startTime.toISOString().split('T')[0] + 'T' + formik.values.startTime.toISOString().split('T')[1]}
+              />
+            </div>
+          </>
+        )}
+      </div>
+    </div>
   )
 }
 
@@ -593,29 +513,28 @@ function ConfirmationStep({
   // If reservation was successfully created
   if (success && newReservationId) {
     return (
-      <Box sx={{ textAlign: 'center', py: 3 }}>
-        <Alert severity="success" sx={{ mb: 3 }}>
+      <div className="text-center py-3">
+        <div className="mb-3 text-green-500">
           Reservation created successfully!
-        </Alert>
-        <Typography variant="h6" gutterBottom>
+        </div>
+        <p className="text-base font-semibold mb-4">
           Your reservation has been confirmed.
-        </Typography>
-        <Box sx={{ mt: 4, display: 'flex', justifyContent: 'center', gap: 2 }}>
-          <Button
-            variant="contained"
-            color="primary"
+        </p>
+        <div className="flex justify-center space-x-4">
+          <button
             onClick={() => navigate(`/reservations/${newReservationId}`)}
+            className="px-4 py-2 bg-blue-500 text-white rounded"
           >
             View Reservation Details
-          </Button>
-          <Button
-            variant="outlined"
+          </button>
+          <button
             onClick={() => navigate('/reservations')}
+            className="px-4 py-2 bg-gray-500 text-white rounded"
           >
             Go to My Reservations
-          </Button>
-        </Box>
-      </Box>
+          </button>
+        </div>
+      </div>
     )
   }
 
@@ -635,88 +554,88 @@ function ConfirmationStep({
   }
 
   return (
-    <Box>
-      <Typography variant="h6" gutterBottom>
+    <div>
+      <h2 className="text-base font-semibold mb-3">
         Confirm Reservation Details
-      </Typography>
+      </h2>
 
       {error && (
-        <Alert severity="error" sx={{ mb: 3 }}>
+        <div className="mb-3 text-red-500">
           {error}
-        </Alert>
+        </div>
       )}
 
-      <Paper variant="outlined" sx={{ p: 3, mb: 3 }}>
-        <Grid container spacing={2}>
-          <Grid item xs={12} sm={6}>
-            <Typography variant="subtitle2" color="text.secondary">Resource</Typography>
-            <Typography variant="body1">{resource?.name}</Typography>
-          </Grid>
-          <Grid item xs={12} sm={6}>
-            <Typography variant="subtitle2" color="text.secondary">Location</Typography>
-            <Typography variant="body1">{resource?.location}</Typography>
-          </Grid>
-          <Grid item xs={12} sm={6}>
-            <Typography variant="subtitle2" color="text.secondary">Attendees</Typography>
-            <Typography variant="body1">{formValues.attendees}</Typography>
-          </Grid>
-          <Grid item xs={12} sm={6}>
-            <Typography variant="subtitle2" color="text.secondary">Duration</Typography>
-            <Typography variant="body1">{durationHours} hours</Typography>
-          </Grid>
-          <Grid item xs={12} sm={6}>
-            <Typography variant="subtitle2" color="text.secondary">Start Time</Typography>
-            <Typography variant="body1">{format(formValues.startTime, 'MMM d, yyyy h:mm a')}</Typography>
-          </Grid>
-          <Grid item xs={12} sm={6}>
-            <Typography variant="subtitle2" color="text.secondary">End Time</Typography>
-            <Typography variant="body1">{format(formValues.endTime, 'MMM d, yyyy h:mm a')}</Typography>
-          </Grid>
+      <div className="p-3 border border-gray-200 mb-3">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <div className="sm:col-span-1">
+            <p className="text-sm text-gray-500">Resource</p>
+            <p className="text-base font-semibold">{resource?.name}</p>
+          </div>
+          <div className="sm:col-span-1">
+            <p className="text-sm text-gray-500">Location</p>
+            <p className="text-base font-semibold">{resource?.location}</p>
+          </div>
+          <div className="sm:col-span-1">
+            <p className="text-sm text-gray-500">Attendees</p>
+            <p className="text-base font-semibold">{formValues.attendees}</p>
+          </div>
+          <div className="sm:col-span-1">
+            <p className="text-sm text-gray-500">Duration</p>
+            <p className="text-base font-semibold">{durationHours} hours</p>
+          </div>
+          <div className="sm:col-span-1">
+            <p className="text-sm text-gray-500">Start Time</p>
+            <p className="text-base font-semibold">{format(formValues.startTime, 'MMM d, yyyy h:mm a')}</p>
+          </div>
+          <div className="sm:col-span-1">
+            <p className="text-sm text-gray-500">End Time</p>
+            <p className="text-base font-semibold">{format(formValues.endTime, 'MMM d, yyyy h:mm a')}</p>
+          </div>
 
           {formValues.isRecurring && (
             <>
-              <Grid item xs={12}>
-                <Divider sx={{ my: 1 }} />
-                <Typography variant="subtitle2" color="text.secondary">Recurring Details</Typography>
-              </Grid>
-              <Grid item xs={12} sm={6}>
-                <Typography variant="subtitle2" color="text.secondary">Pattern</Typography>
-                <Typography variant="body1">
+              <div className="sm:col-span-2">
+                <div className="border-t border-gray-200 my-1"></div>
+                <p className="text-sm text-gray-500">Recurring Details</p>
+              </div>
+              <div className="sm:col-span-1">
+                <p className="text-sm text-gray-500">Pattern</p>
+                <p className="text-base font-semibold">
                   Every {formValues.recurrenceInterval} {formValues.recurrencePattern}
-                </Typography>
-              </Grid>
-              <Grid item xs={12} sm={6}>
-                <Typography variant="subtitle2" color="text.secondary">Until</Typography>
-                <Typography variant="body1">
+                </p>
+              </div>
+              <div className="sm:col-span-1">
+                <p className="text-sm text-gray-500">Until</p>
+                <p className="text-base font-semibold">
                   {format(formValues.recurrenceEndDate, 'MMM d, yyyy')}
-                </Typography>
-              </Grid>
+                </p>
+              </div>
             </>
           )}
 
-          <Grid item xs={12} sm={6}>
-            <Typography variant="subtitle2" color="text.secondary">Estimated Price</Typography>
-            <Typography variant="body1">{calculateEstimatedPrice()}</Typography>
-          </Grid>
+          <div className="sm:col-span-1">
+            <p className="text-sm text-gray-500">Estimated Price</p>
+            <p className="text-base font-semibold">{calculateEstimatedPrice()}</p>
+          </div>
 
-          <Grid item xs={12}>
-            <Divider sx={{ my: 1 }} />
-          </Grid>
+          <div className="sm:col-span-2">
+            <div className="border-t border-gray-200 my-1"></div>
+          </div>
 
           {formValues.description && (
-            <Grid item xs={12}>
-              <Typography variant="subtitle2" color="text.secondary">Description</Typography>
-              <Typography variant="body1">{formValues.description}</Typography>
-            </Grid>
+            <div className="sm:col-span-2">
+              <p className="text-sm text-gray-500">Description</p>
+              <p className="text-base font-semibold">{formValues.description}</p>
+            </div>
           )}
-        </Grid>
-      </Paper>
+        </div>
+      </div>
 
-      <Typography variant="body2" color="text.secondary" paragraph>
+      <p className="text-sm text-gray-500">
         By creating this reservation, you agree to the reservation terms and conditions.
         Cancellation may be subject to fees depending on how close to the reservation time you cancel.
-      </Typography>
-    </Box>
+      </p>
+    </div>
   )
 }
 

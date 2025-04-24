@@ -1,5 +1,5 @@
 import { create } from 'zustand'
-import axios from 'axios'
+import api from '../utils/api'
 import { Payment, PaymentFormValues } from '../types'
 
 interface PaymentState {
@@ -10,12 +10,11 @@ interface PaymentState {
 
   fetchPayments: () => Promise<void>
   fetchPaymentById: (id: number) => Promise<void>
-  processPayment: (data: PaymentFormValues) => Promise<number | null>
+  processPayment: (data: PaymentFormValues) => Promise<void>
+  refundPayment: (id: number) => Promise<void>
 }
 
-const API_URL = 'http://localhost:5000/api'
-
-export const usePaymentStore = create<PaymentState>((set) => ({
+export const usePaymentStore = create<PaymentState>((set, get) => ({
   payments: [],
   selectedPayment: null,
   loading: false,
@@ -25,13 +24,11 @@ export const usePaymentStore = create<PaymentState>((set) => ({
     set({ loading: true, error: null })
 
     try {
-      const response = await axios.get(`${API_URL}/Payment`)
+      const response = await api.get('/Payment')
       set({ payments: response.data, loading: false })
-    } catch (err) {
+    } catch (err: any) {
       const errorMessage =
-        axios.isAxiosError(err)
-          ? err.response?.data?.message || 'Failed to fetch payments'
-          : 'An unexpected error occurred'
+        err.response?.data?.message || 'Failed to fetch payments'
 
       set({ loading: false, error: errorMessage })
     }
@@ -41,13 +38,11 @@ export const usePaymentStore = create<PaymentState>((set) => ({
     set({ loading: true, error: null, selectedPayment: null })
 
     try {
-      const response = await axios.get(`${API_URL}/Payment/${id}`)
+      const response = await api.get(`/Payment/${id}`)
       set({ selectedPayment: response.data, loading: false })
-    } catch (err) {
+    } catch (err: any) {
       const errorMessage =
-        axios.isAxiosError(err)
-          ? err.response?.data?.message || 'Failed to fetch payment'
-          : 'An unexpected error occurred'
+        err.response?.data?.message || 'Failed to fetch payment'
 
       set({ loading: false, error: errorMessage })
     }
@@ -57,23 +52,28 @@ export const usePaymentStore = create<PaymentState>((set) => ({
     set({ loading: true, error: null })
 
     try {
-      const response = await axios.post(`${API_URL}/Payment`, data)
-
-      set({
-        loading: false,
-        // Add the new payment to our payments array
-        payments: [response.data, ...get().payments]
-      })
-
-      return response.data.id
-    } catch (err) {
+      await api.post('/Payment', data)
+      set({ loading: false })
+    } catch (err: any) {
       const errorMessage =
-        axios.isAxiosError(err)
-          ? err.response?.data?.message || 'Payment processing failed'
-          : 'An unexpected error occurred'
+        err.response?.data?.message || 'Failed to process payment'
 
       set({ loading: false, error: errorMessage })
-      return null
+      throw new Error(errorMessage) // Re-throw for component handling
+    }
+  },
+
+  refundPayment: async (id: number) => {
+    set({ loading: true, error: null })
+
+    try {
+      await api.post(`/Payment/${id}/refund`)
+      set({ loading: false })
+    } catch (err: any) {
+      const errorMessage =
+        err.response?.data?.message || 'Failed to refund payment'
+
+      set({ loading: false, error: errorMessage })
     }
   }
 }))
