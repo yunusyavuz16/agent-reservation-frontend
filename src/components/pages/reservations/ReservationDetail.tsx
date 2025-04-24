@@ -153,20 +153,20 @@ function ReservationDetail() {
       {/* Header with action buttons */}
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 gap-4">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">Reservation #{selectedReservation.id}</h1>
+          <h1 className="text-2xl font-bold !text-gray-900">Reservation #{selectedReservation.id}</h1>
           <span className={`px-3 py-1 mt-2 inline-flex text-sm font-medium rounded-full
-            ${selectedReservation.status === 'Confirmed' ? 'bg-green-100 text-green-800' :
-              selectedReservation.status === 'Pending' ? 'bg-yellow-100 text-yellow-800' :
-              selectedReservation.status === 'Cancelled' ? 'bg-red-100 text-red-800' :
-              selectedReservation.status === 'Completed' ? 'bg-blue-100 text-blue-800' :
-              'bg-gray-100 text-gray-800'}`}
+            ${selectedReservation.status === 'Confirmed' ? '!bg-green-100 !text-green-800' :
+              selectedReservation.status === 'Pending' ? '!bg-yellow-100 !text-yellow-800' :
+              selectedReservation.status === 'Cancelled' ? '!bg-red-100 !text-red-800' :
+              selectedReservation.status === 'Completed' ? '!bg-blue-100 !text-blue-800' :
+              '!bg-gray-100 !text-gray-800'}`}
           >
             {selectedReservation.status}
           </span>
         </div>
         <div className="flex flex-wrap gap-2 w-full sm:w-auto">
           <button
-            className="rounded-lg normal-case text-gray-700 border-gray-300 hover:bg-gray-50"
+            className="rounded-lg normal-case !text-gray-700 !border-gray-300 hover:!bg-gray-50"
             onClick={() => navigate(-1)}
           >
             Back
@@ -175,7 +175,7 @@ function ReservationDetail() {
           {/* Conditional buttons based on reservation state */}
           {canBeCancelled && (
             <button
-              className="rounded-lg normal-case text-red-600 border-red-300 hover:bg-red-50"
+              className="rounded-lg normal-case !text-red-600 !border-red-300 hover:!bg-red-50"
               onClick={() => setCancelDialogOpen(true)}
             >
               Cancel Reservation
@@ -184,7 +184,7 @@ function ReservationDetail() {
 
           {canBeReviewed && (
             <button
-              className="rounded-lg normal-case bg-blue-600 hover:bg-blue-700"
+              className="rounded-lg normal-case !bg-blue-600 hover:!bg-blue-700 !text-white"
               onClick={() => setReviewDialogOpen(true)}
             >
               Write Review
@@ -194,7 +194,7 @@ function ReservationDetail() {
           {/* Payment button if reservation is confirmed but not paid */}
           {selectedReservation.status === 'Confirmed' && !selectedReservation.isPaid && (
             <button
-              className="rounded-lg normal-case bg-blue-600 hover:bg-blue-700"
+              className="rounded-lg normal-case !bg-blue-600 hover:!bg-blue-700 !text-white"
               onClick={() => navigate(`/payment/${selectedReservation.id}`)}
             >
               Make Payment
@@ -205,15 +205,15 @@ function ReservationDetail() {
 
       {/* Reservation details */}
       <div className="p-6 mb-6 rounded-xl shadow-sm bg-white">
-        <h2 className="text-lg font-semibold text-gray-900 mb-4">Resource Details</h2>
+        <h2 className="text-lg font-semibold !text-gray-900 mb-4">Resource Details</h2>
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-y-4 gap-x-8">
           <div>
-            <p className="text-sm text-gray-500 mb-1">Resource Name</p>
-            <p className="text-gray-900">{selectedReservation.resourceName || 'Unknown Resource'}</p>
+            <p className="text-sm !text-gray-500 mb-1">Resource Name</p>
+            <p className="!text-gray-900">{selectedReservation.resourceName || 'Unknown Resource'}</p>
           </div>
           <div>
-            <p className="text-sm text-gray-500 mb-1">Resource ID</p>
-            <p className="text-gray-900">#{selectedReservation.resourceId}</p>
+            <p className="text-sm !text-gray-500 mb-1">Resource ID</p>
+            <p className="!text-gray-900">#{selectedReservation.resourceId}</p>
           </div>
           <div className="sm:col-span-2 mt-2">
             <button
@@ -226,28 +226,28 @@ function ReservationDetail() {
         </div>
 
         <div className="my-6">
-          <h2 className="text-lg font-semibold text-gray-900 mb-4">Booking Details</h2>
+          <h2 className="text-lg font-semibold !text-gray-900 mb-4">Booking Details</h2>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-y-4 gap-x-8">
             <div>
-              <p className="text-sm text-gray-500 mb-1">Start Time</p>
-              <p className="text-gray-900">
+              <p className="text-sm !text-gray-500 mb-1">Start Time</p>
+              <p className="!text-gray-900">
                 {format(new Date(selectedReservation.startTime), 'MMM d, yyyy h:mm a')}
               </p>
             </div>
             <div>
-              <p className="text-sm text-gray-500 mb-1">End Time</p>
-              <p className="text-gray-900">
+              <p className="text-sm !text-gray-500 mb-1">End Time</p>
+              <p className="!text-gray-900">
                 {format(new Date(selectedReservation.endTime), 'MMM d, yyyy h:mm a')}
               </p>
             </div>
             <div>
-              <p className="text-sm text-gray-500 mb-1">Creation Date</p>
-              <p className="text-gray-900">
+              <p className="text-sm !text-gray-500 mb-1">Creation Date</p>
+              <p className="!text-gray-900">
                 {format(new Date(selectedReservation.createdAt), 'MMM d, yyyy h:mm a')}
               </p>
             </div>
             <div>
-              <p className="text-sm text-gray-500 mb-1">Payment Status</p>
+              <p className="text-sm !text-gray-500 mb-1">Payment Status</p>
               <div className="mt-1">
                 <span className={`px-3 py-1 inline-flex text-xs font-medium rounded-full
                   ${selectedReservation.isPaid ? 'bg-green-100 text-green-800' : 'bg-yellow-100 text-yellow-800'}`}
@@ -278,23 +278,23 @@ function ReservationDetail() {
         <div className="bg-white p-8 rounded-xl">
           <h2 className="text-xl font-semibold mb-4">Cancel Reservation</h2>
           {actionSuccess ? (
-            <div className="mb-2 text-green-500">{actionSuccess}</div>
+            <div className="mb-2 !text-green-500">{actionSuccess}</div>
           ) : actionError ? (
-            <div className="mb-2 text-red-500">{actionError}</div>
+            <div className="mb-2 !text-red-500">{actionError}</div>
           ) : (
-            <p className="mb-4 text-gray-600">
+            <p className="mb-4 !text-gray-600">
               Are you sure you want to cancel this reservation? This action cannot be undone.
             </p>
           )}
           <div className="mt-4 flex justify-end gap-2">
             <button
-              className="rounded-lg normal-case"
+              className="rounded-lg normal-case !text-gray-700"
               onClick={() => setCancelDialogOpen(false)}
             >
               No, Keep It
             </button>
             <button
-              className="rounded-lg normal-case bg-red-600 hover:bg-red-700 text-white"
+              className="rounded-lg normal-case !bg-red-600 hover:!bg-red-700 !text-white"
               onClick={handleCancelReservation}
             >
               Yes, Cancel Reservation
@@ -310,9 +310,9 @@ function ReservationDetail() {
         <div className="bg-white p-8 rounded-xl">
           <h2 className="text-xl font-semibold mb-4">Write a Review</h2>
           {actionSuccess ? (
-            <div className="mb-2 text-green-500">{actionSuccess}</div>
+            <div className="mb-2 !text-green-500">{actionSuccess}</div>
           ) : actionError ? (
-            <div className="mb-2 text-red-500">{actionError}</div>
+            <div className="mb-2 !text-red-500">{actionError}</div>
           ) : (
             <Formik
               initialValues={{
@@ -403,7 +403,7 @@ function ReservationDetail() {
                       </div>
                     </div>
                     {errors.rating && touched.rating && (
-                      <p className="text-red-500 text-sm mt-1">{errors.rating}</p>
+                      <p className="!text-red-500 text-sm mt-1">{errors.rating}</p>
                     )}
                   </div>
 
@@ -417,12 +417,12 @@ function ReservationDetail() {
                     } rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500`}
                   />
                   {errors.comment && touched.comment && (
-                    <p className="text-red-500 text-sm mt-1">{errors.comment}</p>
+                    <p className="!text-red-500 text-sm mt-1">{errors.comment}</p>
                   )}
 
                   <div className="mt-6 flex justify-end gap-2">
                     <button
-                      className="rounded-lg normal-case"
+                      className="rounded-lg normal-case !text-gray-700"
                       onClick={() => setReviewDialogOpen(false)}
                       disabled={isSubmitting || reviewLoading}
                     >
@@ -430,11 +430,11 @@ function ReservationDetail() {
                     </button>
                     <button
                       type="submit"
-                      className="rounded-lg normal-case bg-blue-600 hover:bg-blue-700 text-white"
+                      className="rounded-lg normal-case !bg-blue-600 hover:!bg-blue-700 !text-white"
                       disabled={isSubmitting || reviewLoading}
                     >
                       {reviewLoading ? (
-                        <div className="animate-spin rounded-full h-6 w-6 border-t-2 border-b-2 border-white"></div>
+                        <div className="animate-spin rounded-full h-6 w-6 !border-t-2 !border-b-2 !border-white"></div>
                       ) : 'Submit Review'}
                     </button>
                   </div>

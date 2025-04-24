@@ -42,7 +42,13 @@
 }
 
 /* Remove default margin and padding */
-h1, h2, h3, h4, h5, h6, p {
+h1,
+h2,
+h3,
+h4,
+h5,
+h6,
+p {
   @apply m-0 p-0;
 }
 
@@ -56,12 +62,21 @@ h1 {
 }
 
 /* Prevent overflow */
-img, svg, video, canvas, audio, iframe, embed, object {
+img,
+svg,
+video,
+canvas,
+audio,
+iframe,
+embed,
+object {
   @apply block max-w-full;
 }
 
 /* Apply consistent box-sizing */
-*, *::before, *::after {
+*,
+*::before,
+*::after {
   @apply box-border;
 }
 
@@ -80,10 +95,32 @@ a:hover {
     color: #213547;
     background-color: #ffffff;
   }
+
   a:hover {
     color: #747bff;
   }
+
   button {
     background-color: #f9f9f9;
   }
+}
+
+h1,
+h2,
+h3,
+h4,
+h5,
+h6,
+select,
+input,
+textarea,
+p,
+div,
+span {
+  color: rgb(31 41 55 / 1) !important;
+}
+
+input,
+textarea,select {
+  background-color: rgb(229 234 239 / 1) !important;
 }

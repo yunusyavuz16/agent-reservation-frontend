@@ -235,7 +235,7 @@ function CreateReservation() {
             {activeStep !== 0 && (
               <button
                 onClick={handleBack}
-                className="px-4 py-2 bg-gray-500 text-white rounded"
+                className="px-4 py-2 !bg-gray-500 !text-white rounded"
               >
                 Back
               </button>
@@ -244,7 +244,7 @@ function CreateReservation() {
             {activeStep === steps.length - 1 ? (
               <button
                 onClick={handleSubmitReservation}
-                className="px-4 py-2 bg-blue-500 text-white rounded"
+                className="px-4 py-2 !bg-blue-500 !text-white rounded"
                 disabled={reservationLoading || reservationSuccess}
               >
                 {reservationLoading ? (
@@ -254,7 +254,7 @@ function CreateReservation() {
             ) : (
               <button
                 onClick={handleNext}
-                className="px-4 py-2 bg-blue-500 text-white rounded"
+                className="px-4 py-2 !bg-blue-500 !text-white rounded"
               >
                 Next
               </button>
@@ -313,7 +313,7 @@ function ResourceSelectionStep({ resources, onSelect, loading, error }: Resource
         placeholder="Search resources"
         value={searchTerm}
         onChange={(e) => setSearchTerm(e.target.value)}
-        className="w-full p-2 border border-gray-300 rounded"
+        className="w-full p-2 !border !border-gray-300 !bg-white rounded"
       />
 
       {filteredResources.length > 0 ? (
@@ -385,7 +385,7 @@ function TimeSelectionStep({ formik, resource }: TimeSelectionStepProps) {
             onChange={(e) => {
               formik.setFieldValue('startTime', new Date(e.target.value))
             }}
-            className="w-full p-2 border border-gray-300 rounded"
+            className="w-full p-2 !border !border-gray-300 !bg-white rounded"
           />
         </div>
         <div className="md:col-span-1">
@@ -395,7 +395,7 @@ function TimeSelectionStep({ formik, resource }: TimeSelectionStepProps) {
             onChange={(e) => {
               formik.setFieldValue('endTime', new Date(e.target.value))
             }}
-            className="w-full p-2 border border-gray-300 rounded"
+            className="w-full p-2 !border !border-gray-300 !bg-white rounded"
             min={formik.values.startTime.toISOString().split('T')[0] + 'T' + formik.values.startTime.toISOString().split('T')[1]}
           />
         </div>
@@ -404,7 +404,7 @@ function TimeSelectionStep({ formik, resource }: TimeSelectionStepProps) {
             placeholder="Any special requests or information about your reservation"
             value={formik.values.description}
             onChange={formik.handleChange}
-            className="w-full p-2 border border-gray-300 rounded"
+            className="w-full p-2 !border !border-gray-300 !bg-white rounded"
             rows={4}
           ></textarea>
         </div>
@@ -415,7 +415,7 @@ function TimeSelectionStep({ formik, resource }: TimeSelectionStepProps) {
             placeholder="Number of Attendees"
             value={formik.values.attendees}
             onChange={formik.handleChange}
-            className="w-full p-2 border border-gray-300 rounded"
+            className="w-full p-2 !border !border-gray-300 !bg-white rounded"
             min="1"
             max={resource?.capacity || 1}
           />
@@ -445,7 +445,7 @@ function TimeSelectionStep({ formik, resource }: TimeSelectionStepProps) {
               <select
                 value={formik.values.recurrencePattern}
                 onChange={formik.handleChange}
-                className="w-full p-2 border border-gray-300 rounded"
+                className="w-full p-2 !border !border-gray-300 !bg-white rounded"
               >
                 {recurrencePatterns.map((pattern) => (
                   <option key={pattern.value} value={pattern.value}>
@@ -461,7 +461,7 @@ function TimeSelectionStep({ formik, resource }: TimeSelectionStepProps) {
                 placeholder="Repeat Every"
                 value={formik.values.recurrenceInterval}
                 onChange={formik.handleChange}
-                className="w-full p-2 border border-gray-300 rounded"
+                className="w-full p-2 !border !border-gray-300 !bg-white rounded"
                 min="1"
                 disabled={!formik.values.recurrencePattern}
               />
@@ -523,13 +523,13 @@ function ConfirmationStep({
         <div className="flex justify-center space-x-4">
           <button
             onClick={() => navigate(`/reservations/${newReservationId}`)}
-            className="px-4 py-2 bg-blue-500 text-white rounded"
+            className="px-4 py-2 !bg-blue-500 !text-white rounded"
           >
             View Reservation Details
           </button>
           <button
             onClick={() => navigate('/reservations')}
-            className="px-4 py-2 bg-gray-500 text-white rounded"
+            className="px-4 py-2 !bg-gray-500 !text-white rounded"
           >
             Go to My Reservations
           </button>

@@ -102,10 +102,10 @@ const UserProfile: React.FC = () => {
             {`${user.firstName.charAt(0)}${user.lastName.charAt(0)}`}
           </div>
           <div>
-            <h1 className="text-2xl font-bold text-gray-900">
+            <h1 className="text-2xl font-bold !text-gray-900">
               {user.firstName} {user.lastName}
             </h1>
-            <p className="text-gray-600">
+            <p className="!text-gray-600">
               {user.email}
             </p>
           </div>
@@ -163,7 +163,7 @@ const UserProfile: React.FC = () => {
               <button
                 type="button"
                 onClick={() => setEditMode(true)}
-                className="absolute right-0 top-0 flex items-center text-blue-600 hover:text-blue-800"
+                className="absolute right-0 top-0 flex items-center !text-blue-600 hover:!text-blue-800"
               >
                 <svg className="w-4 h-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
@@ -174,7 +174,7 @@ const UserProfile: React.FC = () => {
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
               <div>
-                <label htmlFor="firstName" className="block text-sm font-medium text-gray-700 mb-1">
+                <label htmlFor="firstName" className="block text-sm font-medium !text-gray-700 mb-1">
                   First Name
                 </label>
                 <input
@@ -184,13 +184,13 @@ const UserProfile: React.FC = () => {
                   value={profileForm.firstName}
                   onChange={handleInputChange}
                   disabled={!editMode}
-                  className={`w-full px-3 py-2 border ${
-                    !editMode ? 'bg-gray-100 border-gray-200' : 'border-gray-300'
-                  } rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500`}
+                  className={`w-full px-3 py-2 !border ${
+                    !editMode ? '!bg-gray-100 !border-gray-200' : '!border-gray-300 !bg-white'
+                  } rounded-md shadow-sm focus:!ring-blue-500 focus:!border-blue-500`}
                 />
               </div>
               <div>
-                <label htmlFor="lastName" className="block text-sm font-medium text-gray-700 mb-1">
+                <label htmlFor="lastName" className="block text-sm font-medium !text-gray-700 mb-1">
                   Last Name
                 </label>
                 <input
@@ -200,13 +200,13 @@ const UserProfile: React.FC = () => {
                   value={profileForm.lastName}
                   onChange={handleInputChange}
                   disabled={!editMode}
-                  className={`w-full px-3 py-2 border ${
-                    !editMode ? 'bg-gray-100 border-gray-200' : 'border-gray-300'
-                  } rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500`}
+                  className={`w-full px-3 py-2 !border ${
+                    !editMode ? '!bg-gray-100 !border-gray-200' : '!border-gray-300 !bg-white'
+                  } rounded-md shadow-sm focus:!ring-blue-500 focus:!border-blue-500`}
                 />
               </div>
               <div className="sm:col-span-2">
-                <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-1">
+                <label htmlFor="email" className="block text-sm font-medium !text-gray-700 mb-1">
                   Email
                 </label>
                 <input
@@ -222,7 +222,7 @@ const UserProfile: React.FC = () => {
                 />
               </div>
               <div className="sm:col-span-2">
-                <label htmlFor="phoneNumber" className="block text-sm font-medium text-gray-700 mb-1">
+                <label htmlFor="phoneNumber" className="block text-sm font-medium !text-gray-700 mb-1">
                   Phone Number
                 </label>
                 <input
@@ -261,18 +261,18 @@ const UserProfile: React.FC = () => {
 
         {/* Security Tab */}
         <TabPanel value={tabValue} index={1}>
-          <h2 className="text-lg font-semibold text-gray-900 mb-4">
+          <h2 className="text-lg font-semibold !text-gray-900 mb-4">
             Security Settings
           </h2>
 
           <div className="mb-8">
-            <h3 className="text-md font-medium text-gray-800 mb-2">
+            <h3 className="text-md font-medium !text-gray-800 mb-2">
               Change Password
             </h3>
             <div className="border-t border-gray-200 mb-4"></div>
             <div className="grid grid-cols-1 gap-4">
               <div>
-                <label htmlFor="currentPassword" className="block text-sm font-medium text-gray-700 mb-1">
+                <label htmlFor="currentPassword" className="block text-sm font-medium !text-gray-700 mb-1">
                   Current Password
                 </label>
                 <input
@@ -282,7 +282,7 @@ const UserProfile: React.FC = () => {
                 />
               </div>
               <div>
-                <label htmlFor="newPassword" className="block text-sm font-medium text-gray-700 mb-1">
+                <label htmlFor="newPassword" className="block text-sm font-medium !text-gray-700 mb-1">
                   New Password
                 </label>
                 <input
@@ -292,7 +292,7 @@ const UserProfile: React.FC = () => {
                 />
               </div>
               <div>
-                <label htmlFor="confirmNewPassword" className="block text-sm font-medium text-gray-700 mb-1">
+                <label htmlFor="confirmNewPassword" className="block text-sm font-medium !text-gray-700 mb-1">
                   Confirm New Password
                 </label>
                 <input
@@ -302,7 +302,7 @@ const UserProfile: React.FC = () => {
                 />
               </div>
               <div>
-                <button className="mt-2 px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
+                <button className="mt-2 px-4 py-2 !border !border-transparent rounded-md shadow-sm text-sm font-medium !text-white !bg-blue-600 hover:!bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:!ring-blue-500">
                   Update Password
                 </button>
               </div>
@@ -310,14 +310,14 @@ const UserProfile: React.FC = () => {
           </div>
 
           <div>
-            <h3 className="text-md font-medium text-gray-800 mb-2">
+            <h3 className="text-md font-medium !text-gray-800 mb-2">
               Two-Factor Authentication
             </h3>
             <div className="border-t border-gray-200 mb-4"></div>
-            <p className="text-gray-600 mb-4">
+            <p className="!text-gray-600 mb-4">
               Two-factor authentication is currently disabled.
             </p>
-            <button className="px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
+            <button className="px-4 py-2 !border !border-gray-300 rounded-md shadow-sm text-sm font-medium !text-gray-700 !bg-white hover:!bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:!ring-blue-500">
               Enable Two-Factor Authentication
             </button>
           </div>
@@ -325,16 +325,16 @@ const UserProfile: React.FC = () => {
 
         {/* Preferences Tab */}
         <TabPanel value={tabValue} index={2}>
-          <h2 className="text-lg font-semibold text-gray-900 mb-4">
+          <h2 className="text-lg font-semibold !text-gray-900 mb-4">
             Preferences
           </h2>
 
           <div>
-            <h3 className="text-md font-medium text-gray-800 mb-2">
+            <h3 className="text-md font-medium !text-gray-800 mb-2">
               Notification Settings
             </h3>
             <div className="border-t border-gray-200 mb-4"></div>
-            <p className="text-gray-600">
+            <p className="!text-gray-600">
               Notification settings coming soon...
             </p>
           </div>

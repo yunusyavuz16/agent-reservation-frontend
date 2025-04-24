@@ -375,8 +375,8 @@ function ResourceDetail() {
                           type="number"
                           id="attendees"
                           name="attendees"
-                          className={`w-full p-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 ${
-                            touched.attendees && errors.attendees ? 'border-red-500' : 'border-gray-300'
+                          className={`w-full p-2 !border rounded-lg focus:!ring-2 focus:!ring-blue-500 focus:!border-blue-500 ${
+                            touched.attendees && errors.attendees ? '!border-red-500 !bg-red-50' : '!border-gray-300 !bg-white'
                           }`}
                           value={values.attendees}
                           onChange={handleChange}
@@ -399,8 +399,8 @@ function ResourceDetail() {
                           id="description"
                           name="description"
                           rows={3}
-                          className={`w-full p-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 ${
-                            touched.description && errors.description ? 'border-red-500' : 'border-gray-300'
+                          className={`w-full p-2 !border rounded-lg focus:!ring-2 focus:!ring-blue-500 focus:!border-blue-500 ${
+                            touched.description && errors.description ? '!border-red-500 !bg-red-50' : '!border-gray-300 !bg-white'
                           }`}
                           placeholder="Briefly describe why you need this resource..."
                           value={values.description}
@@ -489,11 +489,11 @@ function ResourceDetail() {
                     <button
                       type="submit"
                       disabled={creatingReservation}
-                      className="w-full py-3 px-4 mt-6 bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-lg shadow-md transition-colors duration-200 flex justify-center items-center"
+                      className="w-full py-3 px-4 mt-6 !bg-blue-600 hover:!bg-blue-700 !text-white font-medium rounded-lg shadow-md transition-colors duration-200 flex justify-center items-center"
                     >
                       {creatingReservation ? (
                         <>
-                          <div className="animate-spin rounded-full h-5 w-5 border-t-2 border-b-2 border-white mr-3"></div>
+                          <div className="animate-spin rounded-full h-5 w-5 !border-t-2 !border-b-2 !border-white mr-3"></div>
                           Creating Reservation...
                         </>
                       ) : (
