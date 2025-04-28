@@ -210,55 +210,97 @@ function CreateReservation() {
   }
 
   return (
-    <div className="max-w-lg p-4">
-      <div className="p-3">
-        <h1 className="text-center text-2xl font-bold mb-4">
+    <div className="max-w-4xl mx-auto p-6">
+      <div className="bg-white rounded-xl shadow-lg p-8">
+        <h1 className="text-center text-3xl font-bold mb-8 text-gray-800">
           Create Reservation
         </h1>
 
-        {/* Stepper */}
-        <div className="flex justify-center space-x-4 pt-3 pb-5">
-          {steps.map((label) => (
-            <div key={label} className="flex items-center">
-              <div className="h-2 w-2 rounded-full bg-gray-500"></div>
-              <span className="ml-2">{label}</span>
+        {/* Enhanced Stepper */}
+        <div className="flex justify-between items-center mb-10 relative">
+          {steps.map((label, index) => (
+            <div key={label} className="flex flex-col items-center relative z-10">
+              <div
+                className={`flex items-center justify-center w-10 h-10 rounded-full border-2 transition-all
+                  ${index <= activeStep
+                    ? 'bg-blue-600 border-blue-700 text-white'
+                    : 'bg-white border-gray-300 text-gray-500'}`}>
+                {index < activeStep ? (
+                  <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7" />
+                  </svg>
+                ) : (
+                  index + 1
+                )}
+              </div>
+              <span className={`mt-2 text-sm font-medium ${index <= activeStep ? 'text-blue-600' : 'text-gray-500'}`}>
+                {label}
+              </span>
             </div>
           ))}
+
+          {/* Progress line */}
+          <div className="absolute top-5 left-0 right-0 h-0.5 bg-gray-200 -z-10"></div>
+          <div
+            className="absolute top-5 left-0 h-0.5 bg-blue-600 transition-all -z-10"
+            style={{ width: `${(activeStep / (steps.length - 1)) * 100}%` }}
+          ></div>
         </div>
 
-        {/* Step content */}
-        {getStepContent(activeStep)}
+        {/* Card for step content */}
+        <div className="bg-gray-50 rounded-lg p-6 mb-8 min-h-80">
+          {getStepContent(activeStep)}
+        </div>
 
         {/* Navigation buttons - only show if not on success screen */}
         {!(activeStep === 2 && reservationSuccess) && (
-          <div className="flex justify-end mt-3 space-x-2">
-            {activeStep !== 0 && (
-              <button
-                onClick={handleBack}
-                className="px-4 py-2 !bg-gray-500 !text-white rounded"
-              >
-                Back
-              </button>
-            )}
-
-            {activeStep === steps.length - 1 ? (
-              <button
-                onClick={handleSubmitReservation}
-                className="px-4 py-2 !bg-blue-500 !text-white rounded"
-                disabled={reservationLoading || reservationSuccess}
-              >
-                {reservationLoading ? (
-                  <div className="animate-spin h-5 w-5 mx-auto"></div>
-                ) : 'Create Reservation'}
-              </button>
-            ) : (
-              <button
-                onClick={handleNext}
-                className="px-4 py-2 !bg-blue-500 !text-white rounded"
-              >
-                Next
-              </button>
-            )}
+          <div className="flex justify-between mt-6">
+            <div>
+              {activeStep !== 0 && (
+                <button
+                  onClick={handleBack}
+                  className="px-6 py-3 border border-gray-300 text-gray-700 font-medium rounded-lg hover:bg-gray-50 transition-colors flex items-center"
+                >
+                  <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 19l-7-7 7-7" />
+                  </svg>
+                  Back
+                </button>
+              )}
+            </div>
+            <div>
+              {activeStep === steps.length - 1 ? (
+                <button
+                  onClick={handleSubmitReservation}
+                  className="px-6 py-3 bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-lg shadow-md hover:shadow-lg transition-all flex items-center"
+                  disabled={reservationLoading || reservationSuccess}
+                >
+                  {reservationLoading ? (
+                    <div className="flex items-center">
+                      <div className="animate-spin rounded-full h-5 w-5 border-t-2 border-b-2 border-white mr-2"></div>
+                      Processing...
+                    </div>
+                  ) : (
+                    <>
+                      <span>Create Reservation</span>
+                      <svg className="w-5 h-5 ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7" />
+                      </svg>
+                    </>
+                  )}
+                </button>
+              ) : (
+                <button
+                  onClick={handleNext}
+                  className="px-6 py-3 bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-lg shadow-md hover:shadow-lg transition-all flex items-center"
+                >
+                  <span>Next</span>
+                  <svg className="w-5 h-5 ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 5l7 7-7 7" />
+                  </svg>
+                </button>
+              )}
+            </div>
           </div>
         )}
       </div>
@@ -275,87 +317,95 @@ interface ResourceSelectionStepProps {
 }
 
 function ResourceSelectionStep({ resources, onSelect, loading, error }: ResourceSelectionStepProps) {
-  const [searchTerm, setSearchTerm] = useState('')
-
-  // Filter resources based on search term and availability
-  const availableResources = resources.filter(resource => resource.isActive)
-
-  const filteredResources = availableResources.filter(resource =>
-    resource.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    resource.description.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    resource.location.toLowerCase().includes(searchTerm.toLowerCase())
-  )
-
   if (loading) {
     return (
-      <div className="flex justify-center py-3">
-        <div className="animate-spin h-10 w-10"></div>
+      <div className="flex justify-center items-center py-8">
+        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-500"></div>
       </div>
     )
   }
 
   if (error) {
     return (
-      <div className="mt-2 text-red-500">
+      <div className="bg-red-50 border border-red-200 text-red-700 p-4 rounded-lg">
         {error}
+      </div>
+    )
+  }
+
+  if (!resources.length) {
+    return (
+      <div className="text-center py-8">
+        <svg
+          className="mx-auto h-16 w-16 text-gray-400"
+          fill="none"
+          stroke="currentColor"
+          viewBox="0 0 24 24"
+        >
+          <path
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            strokeWidth="2"
+            d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"
+          />
+        </svg>
+        <p className="mt-4 text-lg text-gray-600">No resources available</p>
       </div>
     )
   }
 
   return (
     <div>
-      <h2 className="text-base font-semibold mb-3">
-        Select a resource to reserve
-      </h2>
-
-      <input
-        type="text"
-        placeholder="Search resources"
-        value={searchTerm}
-        onChange={(e) => setSearchTerm(e.target.value)}
-        className="w-full p-2 !border !border-gray-300 !bg-white rounded"
-      />
-
-      {filteredResources.length > 0 ? (
-        <div className="mt-1 grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
-          {filteredResources.map((resource) => (
-            <div
-              key={resource.id}
-              className="cursor-pointer transition-all duration-200 hover:shadow-md hover:transform hover:translate-y-[-4px]"
-              onClick={() => onSelect(resource)}
-            >
-              <div className="p-4">
-                <h3 className="text-base font-semibold mb-2">
-                  {resource.name}
-                </h3>
-                <p className="text-sm text-gray-500 mb-1.5">
-                  {resource.description && resource.description.length > 100
-                    ? `${resource.description.substring(0, 100)}...`
-                    : resource.description}
-                </p>
-                <p className="text-sm">
-                  Capacity: {resource.capacity || 'N/A'}
-                </p>
-                <p className="text-sm">
-                  Location: {resource.location}
-                </p>
+      <h2 className="text-xl font-semibold mb-4 text-gray-800">Select a Resource</h2>
+      <div className="grid grid-cols-1 gap-4">
+        {resources.map((resource) => (
+          <div
+            key={resource.id}
+            className="border border-gray-200 rounded-lg p-4 hover:border-blue-500 hover:shadow-md transition-all cursor-pointer flex items-start"
+            onClick={() => onSelect(resource)}
+          >
+            <div className="flex-shrink-0 mr-4">
+              {resource.imageUrl ? (
+                <img
+                  src={resource.imageUrl}
+                  alt={resource.name}
+                  className="w-24 h-24 object-cover rounded-md"
+                />
+              ) : (
+                <div className="w-24 h-24 bg-gray-200 rounded-md flex items-center justify-center">
+                  <svg className="w-12 h-12 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
+                  </svg>
+                </div>
+              )}
+            </div>
+            <div className="flex-grow">
+              <h3 className="text-lg font-medium text-gray-900">{resource.name}</h3>
+              <p className="text-gray-600 text-sm mb-2 line-clamp-2">{resource.description}</p>
+              <div className="flex flex-wrap gap-2 mt-2">
+                <span className="px-2 py-1 bg-blue-100 text-blue-800 text-xs rounded-full">
+                  Capacity: {resource.capacity}
+                </span>
                 {resource.hourlyRate && (
-                  <p className="text-sm">
-                    Rate: ${resource.hourlyRate}/hour
-                  </p>
+                  <span className="px-2 py-1 bg-green-100 text-green-800 text-xs rounded-full">
+                    ${resource.hourlyRate}/hour
+                  </span>
+                )}
+                {resource.location && (
+                  <span className="px-2 py-1 bg-gray-100 text-gray-800 text-xs rounded-full">
+                    {resource.location}
+                  </span>
                 )}
               </div>
-              <div className="p-2">
-                <button className="text-sm text-blue-500">Select</button>
-              </div>
             </div>
-          ))}
-        </div>
-      ) : (
-        <div className="mt-2 text-sm text-gray-500">
-          No resources found matching "{searchTerm}".
-        </div>
-      )}
+            <div className="flex-shrink-0 ml-2">
+              <svg className="w-6 h-6 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 5l7 7-7 7" />
+              </svg>
+            </div>
+          </div>
+        ))}
+      </div>
     </div>
   )
 }
@@ -367,120 +417,158 @@ interface TimeSelectionStepProps {
 }
 
 function TimeSelectionStep({ formik, resource }: TimeSelectionStepProps) {
+  if (!resource) {
+    return <div>Please select a resource first</div>
+  }
+
   return (
     <div>
-      <h2 className="text-base font-semibold mb-3">
-        Select Reservation Details
-      </h2>
+      <h2 className="text-xl font-semibold mb-6 text-gray-800">Choose Reservation Time</h2>
 
-      <p className="text-sm text-gray-500 mb-3">
-        Resource: {resource?.name}
-      </p>
+      <div className="mb-6 bg-blue-50 border-l-4 border-blue-500 p-4 rounded-r-lg">
+        <h3 className="font-medium text-blue-800 mb-1">Selected Resource: {resource.name}</h3>
+        <p className="text-blue-700 text-sm">{resource.description}</p>
+      </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-        <div className="md:col-span-1">
-          <input
-            type="datetime-local"
-            value={formik.values.startTime.toISOString().split('T')[0] + 'T' + formik.values.startTime.toISOString().split('T')[1]}
-            onChange={(e) => {
-              formik.setFieldValue('startTime', new Date(e.target.value))
-            }}
-            className="w-full p-2 !border !border-gray-300 !bg-white rounded"
-          />
-        </div>
-        <div className="md:col-span-1">
-          <input
-            type="datetime-local"
-            value={formik.values.endTime.toISOString().split('T')[0] + 'T' + formik.values.endTime.toISOString().split('T')[1]}
-            onChange={(e) => {
-              formik.setFieldValue('endTime', new Date(e.target.value))
-            }}
-            className="w-full p-2 !border !border-gray-300 !bg-white rounded"
-            min={formik.values.startTime.toISOString().split('T')[0] + 'T' + formik.values.startTime.toISOString().split('T')[1]}
-          />
-        </div>
-        <div className="md:col-span-2">
-          <textarea
-            placeholder="Any special requests or information about your reservation"
-            value={formik.values.description}
-            onChange={formik.handleChange}
-            className="w-full p-2 !border !border-gray-300 !bg-white rounded"
-            rows={4}
-          ></textarea>
-        </div>
-
-        <div className="md:col-span-1">
-          <input
-            type="number"
-            placeholder="Number of Attendees"
-            value={formik.values.attendees}
-            onChange={formik.handleChange}
-            className="w-full p-2 !border !border-gray-300 !bg-white rounded"
-            min="1"
-            max={resource?.capacity || 1}
-          />
-        </div>
-
-        <div className="md:col-span-2">
-          <div className="border-t border-gray-200 my-2"></div>
-          <p className="text-sm font-semibold mb-2">
-            Recurring Reservation Options
-          </p>
-          <div className="flex items-center">
-            <input
-              type="checkbox"
-              checked={formik.values.isRecurring}
-              onChange={(e) => {
-                formik.setFieldValue('isRecurring', e.target.checked);
-              }}
-              className="mr-2"
+      <form className="space-y-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">Start Time</label>
+            <DatePicker
+              selected={formik.values.startTime}
+              onChange={(date) => formik.setFieldValue('startTime', date)}
+              showTimeSelect
+              dateFormat="MMM d, yyyy h:mm aa"
+              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
             />
-            <label>Make this a recurring reservation</label>
+            {formik.errors.startTime && formik.touched.startTime && (
+              <p className="mt-1 text-sm text-red-600">{formik.errors.startTime.toString()}</p>
+            )}
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">End Time</label>
+            <DatePicker
+              selected={formik.values.endTime}
+              onChange={(date) => formik.setFieldValue('endTime', date)}
+              showTimeSelect
+              dateFormat="MMM d, yyyy h:mm aa"
+              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+            />
+            {formik.errors.endTime && formik.touched.endTime && (
+              <p className="mt-1 text-sm text-red-600">{formik.errors.endTime.toString()}</p>
+            )}
           </div>
         </div>
 
-        {formik.values.isRecurring && (
-          <>
-            <div className="md:col-span-1">
-              <select
-                value={formik.values.recurrencePattern}
-                onChange={formik.handleChange}
-                className="w-full p-2 !border !border-gray-300 !bg-white rounded"
-              >
-                {recurrencePatterns.map((pattern) => (
-                  <option key={pattern.value} value={pattern.value}>
-                    {pattern.label}
-                  </option>
-                ))}
-              </select>
-            </div>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">Description</label>
+            <textarea
+              name="description"
+              value={formik.values.description}
+              onChange={formik.handleChange}
+              onBlur={formik.handleBlur}
+              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+              rows={3}
+              placeholder="Optional: Add details about your reservation"
+            />
+            {formik.errors.description && formik.touched.description && (
+              <p className="mt-1 text-sm text-red-600">{formik.errors.description.toString()}</p>
+            )}
+          </div>
 
-            <div className="md:col-span-1">
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">Number of Attendees</label>
+            <div className="flex items-center">
               <input
                 type="number"
-                placeholder="Repeat Every"
-                value={formik.values.recurrenceInterval}
+                name="attendees"
+                value={formik.values.attendees}
                 onChange={formik.handleChange}
-                className="w-full p-2 !border !border-gray-300 !bg-white rounded"
-                min="1"
-                disabled={!formik.values.recurrencePattern}
+                onBlur={formik.handleBlur}
+                min={1}
+                max={resource.capacity}
+                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
               />
+              <span className="ml-3 text-gray-500 text-sm">/ {resource.capacity} max</span>
             </div>
+            {formik.errors.attendees && formik.touched.attendees && (
+              <p className="mt-1 text-sm text-red-600">{formik.errors.attendees.toString()}</p>
+            )}
+          </div>
+        </div>
 
-            <div className="md:col-span-1">
-              <input
-                type="datetime-local"
-                value={formik.values.recurrenceEndDate.toISOString().split('T')[0] + 'T' + formik.values.recurrenceEndDate.toISOString().split('T')[1]}
-                onChange={(e) => {
-                  formik.setFieldValue('recurrenceEndDate', new Date(e.target.value));
-                }}
-                className="w-full p-2 border border-gray-300 rounded"
-                min={formik.values.startTime.toISOString().split('T')[0] + 'T' + formik.values.startTime.toISOString().split('T')[1]}
-              />
+        <div className="bg-gray-100 p-4 rounded-lg">
+          <div className="flex items-center mb-4">
+            <input
+              type="checkbox"
+              id="isRecurring"
+              name="isRecurring"
+              checked={formik.values.isRecurring}
+              onChange={formik.handleChange}
+              className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+            />
+            <label htmlFor="isRecurring" className="ml-2 block text-sm text-gray-700">
+              Make this a recurring reservation
+            </label>
+          </div>
+
+          {formik.values.isRecurring && (
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-3 pl-6 border-l-2 border-blue-300">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Recurrence Pattern</label>
+                <select
+                  name="recurrencePattern"
+                  value={formik.values.recurrencePattern}
+                  onChange={formik.handleChange}
+                  onBlur={formik.handleBlur}
+                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                >
+                  <option value="">Select Pattern</option>
+                  {recurrencePatterns.map(pattern => (
+                    <option key={pattern.value} value={pattern.value}>
+                      {pattern.label}
+                    </option>
+                  ))}
+                </select>
+                {formik.errors.recurrencePattern && formik.touched.recurrencePattern && (
+                  <p className="mt-1 text-sm text-red-600">{formik.errors.recurrencePattern.toString()}</p>
+                )}
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Interval</label>
+                <input
+                  type="number"
+                  name="recurrenceInterval"
+                  value={formik.values.recurrenceInterval}
+                  onChange={formik.handleChange}
+                  onBlur={formik.handleBlur}
+                  min={1}
+                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                />
+                {formik.errors.recurrenceInterval && formik.touched.recurrenceInterval && (
+                  <p className="mt-1 text-sm text-red-600">{formik.errors.recurrenceInterval.toString()}</p>
+                )}
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">End Date</label>
+                <DatePicker
+                  selected={formik.values.recurrenceEndDate}
+                  onChange={(date) => formik.setFieldValue('recurrenceEndDate', date)}
+                  dateFormat="MMM d, yyyy"
+                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                />
+                {formik.errors.recurrenceEndDate && formik.touched.recurrenceEndDate && (
+                  <p className="mt-1 text-sm text-red-600">{formik.errors.recurrenceEndDate.toString()}</p>
+                )}
+              </div>
             </div>
-          </>
-        )}
-      </div>
+          )}
+        </div>
+      </form>
     </div>
   )
 }
@@ -513,23 +601,26 @@ function ConfirmationStep({
   // If reservation was successfully created
   if (success && newReservationId) {
     return (
-      <div className="text-center py-3">
-        <div className="mb-3 text-green-500">
-          Reservation created successfully!
+      <div className="text-center py-8">
+        <div className="mb-6">
+          <div className="mx-auto w-16 h-16 bg-green-100 rounded-full flex items-center justify-center">
+            <svg className="w-8 h-8 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7" />
+            </svg>
+          </div>
+          <h3 className="mt-4 text-xl font-semibold text-green-700">Reservation Created!</h3>
+          <p className="mt-2 text-gray-600">Your reservation has been successfully created and is awaiting confirmation.</p>
         </div>
-        <p className="text-base font-semibold mb-4">
-          Your reservation has been confirmed.
-        </p>
-        <div className="flex justify-center space-x-4">
+        <div className="flex flex-col sm:flex-row justify-center space-y-3 sm:space-y-0 sm:space-x-4">
           <button
             onClick={() => navigate(`/reservations/${newReservationId}`)}
-            className="px-4 py-2 !bg-blue-500 !text-white rounded"
+            className="px-6 py-3 bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-lg shadow-md hover:shadow-lg transition-all"
           >
             View Reservation Details
           </button>
           <button
             onClick={() => navigate('/reservations')}
-            className="px-4 py-2 !bg-gray-500 !text-white rounded"
+            className="px-6 py-3 border border-gray-300 text-gray-700 font-medium rounded-lg hover:bg-gray-50 transition-colors"
           >
             Go to My Reservations
           </button>
@@ -555,86 +646,122 @@ function ConfirmationStep({
 
   return (
     <div>
-      <h2 className="text-base font-semibold mb-3">
-        Confirm Reservation Details
-      </h2>
+      <h2 className="text-xl font-semibold mb-6 text-gray-800">Confirm Reservation Details</h2>
 
       {error && (
-        <div className="mb-3 text-red-500">
+        <div className="mb-6 bg-red-50 border border-red-200 text-red-700 p-4 rounded-lg">
           {error}
         </div>
       )}
 
-      <div className="p-3 border border-gray-200 mb-3">
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-          <div className="sm:col-span-1">
-            <p className="text-sm text-gray-500">Resource</p>
-            <p className="text-base font-semibold">{resource?.name}</p>
-          </div>
-          <div className="sm:col-span-1">
-            <p className="text-sm text-gray-500">Location</p>
-            <p className="text-base font-semibold">{resource?.location}</p>
-          </div>
-          <div className="sm:col-span-1">
-            <p className="text-sm text-gray-500">Attendees</p>
-            <p className="text-base font-semibold">{formValues.attendees}</p>
-          </div>
-          <div className="sm:col-span-1">
-            <p className="text-sm text-gray-500">Duration</p>
-            <p className="text-base font-semibold">{durationHours} hours</p>
-          </div>
-          <div className="sm:col-span-1">
-            <p className="text-sm text-gray-500">Start Time</p>
-            <p className="text-base font-semibold">{format(formValues.startTime, 'MMM d, yyyy h:mm a')}</p>
-          </div>
-          <div className="sm:col-span-1">
-            <p className="text-sm text-gray-500">End Time</p>
-            <p className="text-base font-semibold">{format(formValues.endTime, 'MMM d, yyyy h:mm a')}</p>
-          </div>
-
-          {formValues.isRecurring && (
-            <>
-              <div className="sm:col-span-2">
-                <div className="border-t border-gray-200 my-1"></div>
-                <p className="text-sm text-gray-500">Recurring Details</p>
+      <div className="bg-white border border-gray-200 rounded-lg shadow-sm divide-y divide-gray-200">
+        <div className="px-6 py-5">
+          <h3 className="text-lg font-medium text-gray-900">Resource Information</h3>
+          <div className="mt-3 flex items-start">
+            {resource.imageUrl ? (
+              <img src={resource.imageUrl} alt={resource.name} className="w-20 h-20 object-cover rounded-md mr-4" />
+            ) : (
+              <div className="w-20 h-20 bg-gray-200 rounded-md flex items-center justify-center mr-4">
+                <svg className="w-10 h-10 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
+                </svg>
               </div>
-              <div className="sm:col-span-1">
-                <p className="text-sm text-gray-500">Pattern</p>
-                <p className="text-base font-semibold">
-                  Every {formValues.recurrenceInterval} {formValues.recurrencePattern}
+            )}
+            <div>
+              <h4 className="text-lg font-medium text-gray-900">{resource.name}</h4>
+              <p className="text-gray-600 text-sm">{resource.description}</p>
+              {resource.location && (
+                <p className="text-gray-500 text-sm mt-1">
+                  <span className="inline-flex items-center">
+                    <svg className="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+                    </svg>
+                    {resource.location}
+                  </span>
                 </p>
-              </div>
-              <div className="sm:col-span-1">
-                <p className="text-sm text-gray-500">Until</p>
-                <p className="text-base font-semibold">
-                  {format(formValues.recurrenceEndDate, 'MMM d, yyyy')}
-                </p>
-              </div>
-            </>
-          )}
-
-          <div className="sm:col-span-1">
-            <p className="text-sm text-gray-500">Estimated Price</p>
-            <p className="text-base font-semibold">{calculateEstimatedPrice()}</p>
-          </div>
-
-          <div className="sm:col-span-2">
-            <div className="border-t border-gray-200 my-1"></div>
-          </div>
-
-          {formValues.description && (
-            <div className="sm:col-span-2">
-              <p className="text-sm text-gray-500">Description</p>
-              <p className="text-base font-semibold">{formValues.description}</p>
+              )}
             </div>
-          )}
+          </div>
+        </div>
+
+        <div className="px-6 py-5">
+          <h3 className="text-lg font-medium text-gray-900">Reservation Details</h3>
+          <dl className="mt-3 grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-3">
+            <div>
+              <dt className="text-sm font-medium text-gray-500">Start Time</dt>
+              <dd className="mt-1 text-sm text-gray-900">
+                {format(formValues.startTime, 'MMM d, yyyy h:mm aa')}
+              </dd>
+            </div>
+            <div>
+              <dt className="text-sm font-medium text-gray-500">End Time</dt>
+              <dd className="mt-1 text-sm text-gray-900">
+                {format(formValues.endTime, 'MMM d, yyyy h:mm aa')}
+              </dd>
+            </div>
+            <div>
+              <dt className="text-sm font-medium text-gray-500">Duration</dt>
+              <dd className="mt-1 text-sm text-gray-900">{durationHours} hours</dd>
+            </div>
+            <div>
+              <dt className="text-sm font-medium text-gray-500">Attendees</dt>
+              <dd className="mt-1 text-sm text-gray-900">{formValues.attendees} people</dd>
+            </div>
+            {formValues.description && (
+              <div className="sm:col-span-2">
+                <dt className="text-sm font-medium text-gray-500">Description</dt>
+                <dd className="mt-1 text-sm text-gray-900">{formValues.description}</dd>
+              </div>
+            )}
+          </dl>
+        </div>
+
+        {formValues.isRecurring && (
+          <div className="px-6 py-5">
+            <h3 className="text-lg font-medium text-gray-900">Recurrence Information</h3>
+            <dl className="mt-3 grid grid-cols-1 sm:grid-cols-3 gap-x-6 gap-y-3">
+              <div>
+                <dt className="text-sm font-medium text-gray-500">Pattern</dt>
+                <dd className="mt-1 text-sm text-gray-900 capitalize">
+                  {formValues.recurrencePattern}
+                </dd>
+              </div>
+              <div>
+                <dt className="text-sm font-medium text-gray-500">Interval</dt>
+                <dd className="mt-1 text-sm text-gray-900">
+                  Every {formValues.recurrenceInterval} {formValues.recurrencePattern}
+                </dd>
+              </div>
+              <div>
+                <dt className="text-sm font-medium text-gray-500">Until</dt>
+                <dd className="mt-1 text-sm text-gray-900">
+                  {format(formValues.recurrenceEndDate, 'MMM d, yyyy')}
+                </dd>
+              </div>
+            </dl>
+          </div>
+        )}
+
+        <div className="px-6 py-5 flex justify-between items-center bg-gray-50">
+          <div>
+            <span className="text-sm font-medium text-gray-500">Estimated Price:</span>
+            <span className="ml-2 text-lg font-semibold text-gray-900">{calculateEstimatedPrice()}</span>
+          </div>
+          <button
+            onClick={onSubmit}
+            className="px-6 py-3 bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-lg shadow-md hover:shadow-lg transition-all"
+            disabled={loading}
+          >
+            {loading ? (
+              <div className="flex items-center">
+                <div className="animate-spin rounded-full h-5 w-5 border-t-2 border-b-2 border-white mr-2"></div>
+                Processing...
+              </div>
+            ) : 'Confirm Reservation'}
+          </button>
         </div>
       </div>
-
-      <p className="text-sm text-gray-500">
-        By creating this reservation, you agree to the reservation terms and conditions.
-        Cancellation may be subject to fees depending on how close to the reservation time you cancel.
-      </p>
     </div>
   )
 }

@@ -68,7 +68,18 @@ export const useReservationStore = create<ReservationState>((set, get) => ({
       set({ upcomingReservations: response.data, loading: false })
     } catch (err) {
       const error = err as AxiosError<ApiErrorResponse>
-      const errorMessage = error.response?.data?.message || 'Failed to fetch upcoming reservations'
+
+      // Provide more specific and user-friendly error messages
+      let errorMessage = 'Failed to fetch upcoming reservations';
+
+      if (error.response?.status === 401) {
+        errorMessage = 'Authentication error. Please try refreshing the page or logging in again.';
+      } else if (error.response?.data?.message) {
+        errorMessage = error.response.data.message;
+      } else if (error.message) {
+        errorMessage = error.message;
+      }
+
       set({ loading: false, error: errorMessage })
     }
   },

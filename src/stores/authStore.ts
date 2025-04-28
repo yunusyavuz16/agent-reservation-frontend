@@ -5,14 +5,14 @@ import { AuthState, User } from '../types'
 
 interface AuthStore extends AuthState {
   login: (email: string, password: string) => Promise<void>
-  register: (
+  register: (data: {
     firstName: string,
     lastName: string,
     email: string,
     password: string,
     phoneNumber: string,
     confirmPassword?: string
-  ) => Promise<void>
+  }) => Promise<void>
   logout: () => void
   checkAuthStatus: () => void
 }
@@ -62,24 +62,24 @@ export const useAuthStore = create<AuthStore>()(
         }
       },
 
-      register: async (
+      register: async (data: {
         firstName: string,
         lastName: string,
         email: string,
         password: string,
         phoneNumber: string,
         confirmPassword?: string
-      ) => {
+      }) => {
         set({ loading: true, error: null })
 
         try {
           await api.post('/Auth/register', {
-            firstName,
-            lastName,
-            email,
-            password,
-            confirmPassword: confirmPassword || password, // Send confirmPassword to backend
-            phoneNumber
+            firstName: data.firstName,
+            lastName: data.lastName,
+            email: data.email,
+            password: data.password,
+            confirmPassword: data.confirmPassword || data.password, // Send confirmPassword to backend
+            phoneNumber: data.phoneNumber
           })
 
           set({ loading: false })

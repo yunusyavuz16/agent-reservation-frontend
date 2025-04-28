@@ -30,21 +30,37 @@ api.interceptors.request.use(
 api.interceptors.response.use(
   (response) => response,
   (error) => {
-    // Handle authentication errors
-    if (error.response?.status === 401) {
-      // // Clear auth state if needed
-      // localStorage.removeItem('auth-storage')
-      // // You could also redirect to login page here if needed
-      // window.location.href = '/login'
-    }
-
     // Log errors in development environment
     if (import.meta.env.VITE_ENVIRONMENT === 'development') {
-      console.error('API Error:', error)
+      console.error('API Error:', error);
     }
 
-    return Promise.reject(error)
+    // Handle authentication errors ONLY if not on dashboard or reservation pages
+    if (error.response?.status === 401) {
+      // Get current URL path
+      const currentPath = window.location.pathname;
+
+      // Never redirect for dashboard-related pages - they should handle their own errors
+      const isDashboardOrReservationPage =
+        currentPath.startsWith('/dashboard') ||
+        currentPath.startsWith('/reservations') ||
+        currentPath === '/';
+
+      // Don't redirect if we're on a dashboard/reservation page or login-related page
+      const shouldRedirect = !isDashboardOrReservationPage &&
+        !['/login', '/register', '/forgot-password'].includes(currentPath);
+
+      // Clear auth storage and redirect ONLY if we should redirect
+      if (shouldRedirect) {
+        // Clear auth state
+        localStorage.removeItem('auth-storage');
+        // Redirect to login page
+        window.location.href = '/login';
+      }
+    }
+
+    return Promise.reject(error);
   }
-)
+);
 
 export default api
